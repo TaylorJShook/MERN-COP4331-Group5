@@ -11,7 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,22 +20,23 @@ jobs:
         with:
           node-version: 20.16.0
 
-      - name: Verify directory and install dependencies
+      - name: Install dependencies (backend)
         run: |
           echo "Current directory:"
           pwd
-          echo "List files:"
+          echo "Files in repo root:"
           ls -la
+          echo "Changing into backend directory..."
           cd backend
-          echo "Now in backend directory:"
+          echo "Now in:"
           pwd
+          echo "Files in backend:"
           ls -la
           npm install --legacy-peer-deps
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
