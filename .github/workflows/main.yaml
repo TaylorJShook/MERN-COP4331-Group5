@@ -11,9 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
 
     steps:
       - name: Checkout code
@@ -25,11 +22,14 @@ jobs:
           node-version: 20.16.0
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: |
+          cd backend
+          npm install --legacy-peer-deps
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
