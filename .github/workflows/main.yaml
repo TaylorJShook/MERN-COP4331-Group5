@@ -3,17 +3,27 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          path: MERN-COP4331-Group5
+
+      - name: List directory (for debugging)
+        run: |
+          echo "Current working directory:"
+          pwd
+          echo "Listing files recursively:"
+          ls -R
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -22,7 +32,10 @@ jobs:
 
       - name: Install dependencies (Backend)
         run: |
-          cd backend
+          cd MERN-COP4331-Group5/backend
+          echo "Now in backend folder:"
+          pwd
+          ls
           npm install --legacy-peer-deps
 
   deploy:
@@ -31,6 +44,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          path: MERN-COP4331-Group5
 
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
@@ -43,7 +58,7 @@ jobs:
         run: |
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
           cd /var/todoApp/backend
-          git pull origin master
+          git pull origin main
           npm install --legacy-peer-deps
           npm run build || true
           pm2 restart server || systemctl restart nginx || true
