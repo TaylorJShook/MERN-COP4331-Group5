@@ -16,13 +16,14 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
           node-version: 20.16.0
 
-      - name: Install backend dependencies
-        working-directory: ./backend
-        run: npm install --legacy-peer-deps
+      - name: Install dependencies (Backend)
+        run: |
+          cd backend
+          npm install --legacy-peer-deps
 
   deploy:
     needs: build
@@ -37,12 +38,13 @@ jobs:
       - name: Deploy to DigitalOcean Droplet
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
           cd /var/todoApp/backend
           git pull origin master
           npm install --legacy-peer-deps
-          pm2 restart server || pm2 start server.js --name server
+          npm run build || true
+          pm2 restart server || systemctl restart nginx || true
           EOF
