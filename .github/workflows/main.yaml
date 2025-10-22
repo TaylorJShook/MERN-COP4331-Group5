@@ -3,10 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build:
@@ -18,10 +18,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 22  # Use the Node version you installed on your droplet
+          node-version: 20.16.0
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install
 
   deploy:
     needs: build
@@ -36,14 +36,13 @@ jobs:
       - name: Deploy to DigitalOcean Droplet
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_PASS: ${{ secrets.SSH_PASS }} 
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
-          sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
-          cd /var/todoApp
-          git pull origin main
-          npm install --legacy-peer-deps
-          npm run build || echo "No frontend build step"
-          systemctl restart nginx || echo "Nginx not restarted (likely using pm2)"
-          pm2 restart all || echo "PM2 not running or not installed"
+          sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
+          cd /var/www/Ganttify.xyz/html
+          git pull origin master
+          npm install
+          npm run build
+          systemctl restart nginx
           EOF
