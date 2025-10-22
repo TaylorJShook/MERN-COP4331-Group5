@@ -20,17 +20,19 @@ jobs:
         with:
           node-version: 20.16.0
 
-      - name: Check project structure
+      - name: List repo structure
         run: |
+          echo "Current directory:"
           pwd
+          echo "Contents:"
           ls -R
 
       - name: Install dependencies
-        working-directory: ./backend
+        working-directory: ./todoApp/backend
         run: npm install --legacy-peer-deps
 
       - name: Build app
-        working-directory: ./backend
+        working-directory: ./todoApp/backend
         run: npm run build || echo "No build script defined"
 
   deploy:
