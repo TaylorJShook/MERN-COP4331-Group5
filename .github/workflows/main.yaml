@@ -21,9 +21,16 @@ jobs:
         with:
           node-version: 20.16.0
 
-      - name: Install dependencies
+      - name: Verify directory and install dependencies
         run: |
+          echo "Current directory:"
+          pwd
+          echo "List files:"
+          ls -la
           cd backend
+          echo "Now in backend directory:"
+          pwd
+          ls -la
           npm install --legacy-peer-deps
 
   deploy:
@@ -44,7 +51,6 @@ jobs:
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
           sshpass -p "${SSH_PASS}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
-          cd ..
           cd /var/todoApp/backend
           git pull origin master
           npm install --legacy-peer-deps
