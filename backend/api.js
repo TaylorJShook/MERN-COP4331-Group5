@@ -1,9 +1,10 @@
-require('express');
-require('mongodb');
+const express = require('express');
+const { MongoClient } = require('mongodb');
 
 exports.setApp = function (app, client) {
   const token = require('./createJWT.js');
 
+  // --- Add Todo ---
   app.post('/api/addtodo', async (req, res) => {
     const { userId, title, description, createdAt, dueDate, priority, jwtToken } = req.body;
 
@@ -12,7 +13,7 @@ exports.setApp = function (app, client) {
         return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: '' });
       }
     } catch (e) {
-      console.log(e.message);
+      console.error(e.message);
     }
 
     const newTodo = {
@@ -37,37 +38,46 @@ exports.setApp = function (app, client) {
     try {
       refreshedToken = token.refresh(jwtToken);
     } catch (e) {
-      console.log(e.message);
+      console.error(e.message);
     }
 
     res.status(200).json({ error, jwtToken: refreshedToken });
   });
 
+  // --- Login ---
   app.post('/api/login', async (req, res) => {
-    const { login, password } = req.body;
-    const db = client.db('TodoApp');
-    const results = await db.collection('Users').find({ Login: login, Password: password }).toArray();
-
-    if (results.length === 0) {
-      return res.status(200).json({ error: 'Login/Password incorrect' });
-    }
-
-    const { UserId: id, FirstName: fn, LastName: ln } = results[0];
-
     try {
+      const { login, password } = req.body;
+      const db = client.db('TodoApp');
+      const results = await db.collection('Users').find({ Login: login, Password: password }).toArray();
+      console.log('Login attempt:', login, password, 'Results found:', results.length);
+
+
+      if (results.length === 0) {
+        return res.status(200).json({ error: 'Login/Password incorrect' });
+      }
+
+      const { UserID: id, FirstName: fn, LastName: ln } = results[0];
+
       const jwt = token.createToken(fn, ln, id);
+      const jwtValue = typeof jwt === 'string'
+        ? jwt
+        : (jwt.accessToken || jwt.jwtToken || jwt.token || '');
+
       res.status(200).json({
-        accessToken: jwt.accessToken || jwt.jwtToken || jwt.token || '',
+        accessToken: jwtValue,
         firstName: fn,
         lastName: ln,
         id,
         error: ''
       });
     } catch (e) {
-      res.status(200).json({ error: e.message });
+      console.error('Login error:', e);
+      res.status(500).json({ error: e.message || 'Internal server error' });
     }
   });
 
+  // --- Get Todos ---
   app.post('/api/gettodos', async (req, res) => {
     const { userId, jwtToken } = req.body;
 
@@ -76,7 +86,7 @@ exports.setApp = function (app, client) {
         return res.status(200).json({ error: 'The JWT is no longer valid', jwtToken: '' });
       }
     } catch (e) {
-      console.log(e.message);
+      console.error(e.message);
     }
 
     const db = client.db('TodoApp');
@@ -93,7 +103,7 @@ exports.setApp = function (app, client) {
     try {
       refreshedToken = token.refresh(jwtToken);
     } catch (e) {
-      console.log(e.message);
+      console.error(e.message);
     }
 
     const formattedResults = results.map(task => ({
