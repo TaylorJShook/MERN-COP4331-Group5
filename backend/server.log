@@ -1,0 +1,6 @@
+nohup: ignoring input
+[dotenv@17.2.3] injecting env (2) from touch.env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+Loaded environment from /var/todoApp/backend/touch.env
+Connected to MongoDB
+[dotenv@17.2.3] injecting env (0) from touch.env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+Server running on port 5000
