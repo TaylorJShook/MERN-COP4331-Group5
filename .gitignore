@@ -1,0 +1,20 @@
+# Ignore dependency folders
+node_modules/
+
+# Ignore environment files
+
+# Ignore local logs
+*.log
+
+# Ignore build artifacts from backend
+backend/dist/
+backend/__pycache__/
+__pycache__/
+
+# Keep frontend build folder (for deployment)
+!frontend/dist/
+
+# System files
+.DS_Store
+Thumbs.db
+
