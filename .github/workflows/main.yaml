@@ -32,7 +32,7 @@ jobs:
 
       - name: Install dependencies (Backend)
         run: |
-          cd MERN-COP4331-Group5/backend
+          cd MERN-COP4331-Group5
           echo "Now in backend folder:"
           pwd
           ls
@@ -57,7 +57,7 @@ jobs:
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
           sshpass -p "${SSH_KEY}" ssh -o StrictHostKeyChecking=no ${SSH_USERNAME}@${SSH_HOST} << 'EOF'
-          cd /var/todoApp/backend
+          cd /var/todoApp
           git pull origin main
           npm install --legacy-peer-deps
           npm run build || true

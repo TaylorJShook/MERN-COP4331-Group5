@@ -7,8 +7,6 @@ node_modules/
 *.log
 
 # Ignore build artifacts from backend
-backend/dist/
-backend/__pycache__/
 __pycache__/
 
 # Keep frontend build folder (for deployment)
