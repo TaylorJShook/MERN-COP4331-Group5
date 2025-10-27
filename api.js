@@ -1,3 +1,4 @@
+const express = require('express');
 const { ObjectId } = require('mongodb');
 const crypto = require('crypto');
 const sgMail = require('@sendgrid/mail');
@@ -113,7 +114,7 @@ exports.setApp = function setApp(app, client) {
    * outgoing: { id, firstName, lastName, jwtToken, error }
    */
   app.post('/api/register', async (req, res) => {
-    const { firstName, lastName, login, password, email } = req.body;
+    const { firstName, lastName, email, login, password } = req.body;
     if (!firstName || !lastName || !login || !password || !email) {
       return res.status(400).json({ id: -1, firstName: '', lastName: '', jwtToken: '', error: 'firstName, lastName, login, password, and email are required' });
     }
