@@ -40,11 +40,14 @@ async function startServer() {
     await client.connect();
     console.log('Connected to MongoDB');
 
+    // Register API routes BEFORE static files
     const api = require('./api.js');
     api.setApp(app, client);
 
+    // Serve the frontend build
     app.use(express.static(path.join(__dirname, '../dist')));
 
+    // Catch-all for SPA (must be AFTER API routes)
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, '../dist', 'index.html'));
     });
