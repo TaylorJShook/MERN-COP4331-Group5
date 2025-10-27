@@ -7,7 +7,6 @@ require('dotenv').config({ path: './touch.env' });
 
 const app = express();
 
-// CORS setup
 const allowedOrigins = [
   'http://localhost:5173',
   'http://cop4331-group5.xyz',
@@ -33,8 +32,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
-// MongoDB setup
 const url = process.env.MONGODB_URI;
 const client = new MongoClient(url);
 
@@ -46,10 +43,8 @@ async function startServer() {
     const api = require('./api.js');
     api.setApp(app, client);
 
-    // Serve the built frontend from ../dist
     app.use(express.static(path.join(__dirname, '../dist')));
 
-    // Serve index.html for all other routes (SPA support)
     app.get('*', (req, res) => {
       res.sendFile(path.join(__dirname, '../dist', 'index.html'));
     });
