@@ -12,15 +12,14 @@ const LoginPage: React.FC = () => {
       <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
         <Login />
 
-        {/* Divider line */}
         <div className="flex items-center justify-center my-4">
           <hr className="w-1/4 border-gray-300" />
           <span className="mx-2 text-gray-500 text-sm">or</span>
           <hr className="w-1/4 border-gray-300" />
         </div>
 
-        {/* Register Redirect Button */}
         <button
+          type="button"
           onClick={() => navigate('/register')}
           className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
         >
