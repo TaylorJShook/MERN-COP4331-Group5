@@ -305,12 +305,12 @@ exports.setApp = function setApp(app, client) {
   /**
    * POST /api/addtodo
    * Purpose: Create a todo for a user (must match token user).
-   * incoming: { userId, title, description?, createdAt?, dueDate?, priority?, jwtToken }
+   * incoming: { userId, title, description?, createdAt?, startDate?, dueDate?, priority?, jwtToken }
    * outgoing: { id, error, jwtToken }
    */
   app.post('/api/addtodo', async (req, res) => {
     const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
-    const { userId, title, description, createdAt, dueDate, priority } = req.body;
+    const { userId, title, description, createdAt, StartDate, startDate, dueDate, priority } = req.body;
     if (!userId || !title) return res.status(400).json({ id: null, error: 'userId and title are required', jwtToken: '' });
     if (String(userId) !== String(guard.authUserId)) {
       return res.status(403).json({ id: null, error: 'Not authorized for this user', jwtToken: guard.refreshedToken });
@@ -322,6 +322,7 @@ exports.setApp = function setApp(app, client) {
       Description: description ? String(description).trim() : '',
       Completed: false,
       CreatedAt: createdAt ? new Date(createdAt) : new Date(),
+      StartDate: parseDate(StartDate || startDate),
       DueDate: parseDate(dueDate),
       Priority: normalizePriority(priority)
     };
@@ -358,12 +359,12 @@ exports.setApp = function setApp(app, client) {
   /**
    * POST /api/edittodo
    * Purpose: Update fields of a todo (only if owned by token user).
-   * incoming: { id, title?, description?, dueDate?(null to clear), priority?, completed?, jwtToken }
+   * incoming: { id, title?, description?, startDate?(null to clear), dueDate?(null to clear), priority?, completed?, jwtToken }
    * outgoing: { modifiedCount, error, jwtToken }
    */
   app.post('/api/edittodo', async (req, res) => {
     const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
-    const { id, title, description, dueDate, priority, completed } = req.body;
+    const { id, title, description, StartDate, startDate, dueDate, priority, completed } = req.body;
     if (!id) return res.status(400).json({ modifiedCount: 0, error: 'id is required', jwtToken: '' });
     if (!ObjectId.isValid(id)) return res.status(400).json({ modifiedCount: 0, error: 'invalid id format', jwtToken: '' });
 
@@ -371,6 +372,14 @@ exports.setApp = function setApp(app, client) {
     if (typeof title === 'string') $set.Title = title.trim();
     if (typeof description === 'string') $set.Description = description.trim();
     if (typeof completed === 'boolean') $set.Completed = completed;
+
+    const startDateValue = StartDate !== undefined ? StartDate : startDate;
+    if (startDateValue === null) $unset.StartDate = '';
+    else if (typeof startDateValue !== 'undefined') {
+      const d = parseDate(startDateValue);
+      if (!d) return res.status(400).json({ modifiedCount: 0, error: 'startDate is invalid', jwtToken: '' });
+      $set.StartDate = d;
+    }
 
     if (dueDate === null) $unset.DueDate = '';
     else if (typeof dueDate !== 'undefined') {
@@ -401,7 +410,7 @@ exports.setApp = function setApp(app, client) {
    * POST /api/gettodos
    * Purpose: Fetch all todos for the authenticated user.
    * incoming: { userId, jwtToken }
-   * outgoing: { results: [{ title, description, completed, createdAt, dueDate, priority, id }], error, jwtToken }
+   * outgoing: { results: [{ title, description, completed, createdAt, startDate, dueDate, priority, id }], error, jwtToken }
    */
   app.post('/api/gettodos', async (req, res) => {
     const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
@@ -417,6 +426,7 @@ exports.setApp = function setApp(app, client) {
         description: t.Description,
         completed: t.Completed,
         createdAt: t.CreatedAt,
+        StartDate: t.StartDate,
         dueDate: t.DueDate,
         priority: t.Priority,
         id: t._id
