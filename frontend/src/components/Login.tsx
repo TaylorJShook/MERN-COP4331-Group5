@@ -44,7 +44,7 @@ function Login() {
       storeToken(res);
 
       const decoded: any = jwtDecode(accessToken);
-      const userId = decoded.iat;
+      const userId = decoded.id;
       const firstName = decoded.firstName;
       const lastName = decoded.lastName;
 

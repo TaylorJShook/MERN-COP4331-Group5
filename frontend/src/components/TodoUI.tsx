@@ -50,10 +50,10 @@ function TodoUI() {
 
     const obj = {
       userId: userId,
-      Title: title,
-      Description: description,
-      StartDate: startDate,
-      DueDate: dueDate,
+      title: title,
+      description: description,
+      startDate: startDate,
+      dueDate: dueDate,
       jwtToken: retrieveToken(),
     };
 
@@ -81,6 +81,7 @@ function TodoUI() {
         await getTodos(); // Refresh list
       }
     } catch (error: any) {
+      console.error('Catch error:', error);
       setMessage(error.toString());
     }
   }
@@ -101,11 +102,11 @@ function TodoUI() {
         <ul>
           {todos.map((todo, index) => (
             <li key={index} style={{ marginBottom: '10px' }}>
-              <strong>{todo.Title}</strong> <br />
-              {todo.Description && <span>{todo.Description}</span>} <br />
+              <strong>{todo.title}</strong> <br />
+              {todo.description && <span>{todo.description}</span>} <br />
               <em>Start:</em> {todo.StartDate || 'N/A'} | <em>Due:</em>{' '}
-              {todo.DueDate || 'N/A'} <br />
-              <em>Completed:</em> {todo.Completed ? '✅' : '❌'}
+              {todo.dueDate || 'N/A'} <br />
+              <em>Completed:</em> {todo.completed ? '✅' : '❌'}
             </li>
           ))}
         </ul>

@@ -2,7 +2,10 @@ export function storeToken( tok:any ) : any
 {
     try
     {
-        localStorage.setItem('token_data', tok.accessToken);
+        // Handle both string tokens and token objects
+        // Check for jwtToken, accessToken, or token properties
+        const tokenValue = typeof tok === 'string' ? tok : (tok?.jwtToken || tok?.accessToken || tok?.token || tok);
+        localStorage.setItem('token_data', tokenValue);
     }
     catch(e)
     {
