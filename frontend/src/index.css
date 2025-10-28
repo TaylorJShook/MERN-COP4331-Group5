@@ -24,10 +24,11 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  padding: 0;
+  display: block;     /* was flex; don't center the entire app */
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100vh;  /* keep full-height pages if you like */
+  overflow-x: hidden; /* belt-and-suspenders against stray overflow */
 }
 
 h1 {

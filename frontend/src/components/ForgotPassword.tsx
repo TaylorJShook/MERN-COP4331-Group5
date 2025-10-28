@@ -1,37 +1,36 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
 
-const VerifyEmail: React.FC = () => {
-  const [code, setCode] = useState('');
+const ForgotPassword: React.FC = () => {
+  const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const pendingLogin = localStorage.getItem('pendingLogin') || '';
-
-  const handleVerify = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleResetPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setMessage('');
     setLoading(true);
 
     try {
-      const response = await fetch(buildPath('/api/verify-email'), {
+      const response = await fetch(buildPath('api/forgot-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login: pendingLogin, code }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setMessage(data?.error || 'Verification failed.');
-      } else if (data?.error) {
-        setMessage(data.error);
+      if (response.ok && !data.error) {
+        setMessage('Password reset email sent! Check your inbox.');
+        // Optionally redirect after a delay
+        setTimeout(() => {
+          navigate('/');
+        }, 3000);
       } else {
-        localStorage.removeItem('pendingLogin');
-        navigate('/login');
+        setMessage(data.error || 'Failed to send reset email.');
       }
     } catch (err) {
       console.error(err);
@@ -39,6 +38,10 @@ const VerifyEmail: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    navigate('/');
   };
 
   return (
@@ -106,20 +109,10 @@ const VerifyEmail: React.FC = () => {
             margin: 0,
             textAlign: 'center'
           }}>
-            Daily Task Planner
+            Reset Password
           </h1>
 
-          {/* Subtitle */}
-          <p style={{ 
-            color: '#000000', 
-            margin: 0,
-            fontSize: '1.125rem',
-            textAlign: 'center'
-          }}>
-            Use our app to track your tasks!
-          </p>
-
-          {/* Verify Email Form */}
+          {/* Reset Password Form */}
           <div style={{ 
             backgroundColor: '#BCC7BD', 
             borderRadius: '0.5rem', 
@@ -128,43 +121,24 @@ const VerifyEmail: React.FC = () => {
             maxWidth: '28rem',
             border: '1px solid #e0e0e0'
           }}>
-            <h2 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '600', 
-              marginBottom: '1.5rem', 
-              color: '#000000',
-              margin: '0 0 1.5rem 0'
-            }}>
-              Verify Your Email
-            </h2>
-            
-            <p style={{ 
-              textAlign: 'center', 
-              marginBottom: '1.5rem',
-              color: '#000000',
-              fontSize: '0.875rem'
-            }}>
-              A verification code was sent to the email associated with <strong>{pendingLogin}</strong>.
-            </p>
-            
-            <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-              {/* Verification Code Field */}
+            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+              {/* Email Field */}
               <div style={{ textAlign: 'left', width: '100%' }}>
-                <label htmlFor="code" style={{ 
+                <label htmlFor="email" style={{ 
                   display: 'block', 
                   fontSize: '0.875rem', 
                   fontWeight: '500', 
                   color: '#000000', 
                   marginBottom: '0.5rem' 
                 }}>
-                  Verification Code
+                  Email
                 </label>
                 <input
-                  type="text"
-                  id="code"
+                  type="email"
+                  id="email"
                   placeholder="Value"
-                  value={code}
-                  onChange={e => setCode(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   style={{
                     width: '100%',
@@ -179,40 +153,89 @@ const VerifyEmail: React.FC = () => {
                 />
               </div>
 
-              {/* Verify Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  borderRadius: '0.375rem',
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  backgroundColor: loading ? '#9ca3af' : '#343a40',
-                  color: 'white',
-                  marginBottom: '1rem',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {loading ? 'Verifying...' : 'Verify Email'}
-              </button>
+              {/* Action Buttons Row */}
+              <div style={{ 
+                display: 'flex', 
+                gap: '1rem', 
+                width: '100%',
+                marginTop: '1rem'
+              }}>
+                {/* Cancel Button */}
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  style={{
+                    flex: 1,
+                    padding: '0.875rem',
+                    borderRadius: '0.375rem',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    border: '1px solid #d0d0d0',
+                    cursor: 'pointer',
+                    backgroundColor: '#f5f5f5',
+                    color: '#000000',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  Cancel
+                </button>
 
-              {/* Error Message */}
+                {/* Reset Password Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    flex: 1,
+                    padding: '0.875rem',
+                    borderRadius: '0.375rem',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    border: 'none',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    backgroundColor: loading ? '#9ca3af' : '#343a40',
+                    color: 'white',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {loading ? 'Sending...' : 'Reset Password'}
+                </button>
+              </div>
+
+              {/* Error/Success Message */}
               {message && (
                 <div style={{ 
-                  color: '#dc2626', 
+                  color: message.includes('sent') ? '#16a34a' : '#dc2626', 
                   fontSize: '0.875rem', 
                   textAlign: 'center', 
-                  marginBottom: '1rem',
+                  marginTop: '1rem',
                   width: '100%'
                 }}>
                   {message}
                 </div>
               )}
             </form>
+
+            {/* Back to Sign In Button */}
+            <div style={{ marginTop: '1rem' }}>
+              <a 
+                href="/" 
+                style={{ 
+                  display: 'block',
+                  width: '100%',
+                  padding: '0.875rem',
+                  backgroundColor: '#343a40',
+                  color: 'white',
+                  borderRadius: '0.375rem',
+                  fontWeight: '500',
+                  fontSize: '0.875rem',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                  boxSizing: 'border-box'
+                }}
+              >
+                Back to Sign In
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -220,4 +243,4 @@ const VerifyEmail: React.FC = () => {
   );
 };
 
-export default VerifyEmail;
+export default ForgotPassword;

@@ -1,8 +1,8 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  max-width: none;      /* let pages decide their own width */
+  margin: 0;            /* no auto centering wrapper */
+  padding: 0;           /* REMOVE the 2rem that created the top gap */
+  text-align: initial;  /* avoid forcing center text everywhere */
 }
 
 .logo {
