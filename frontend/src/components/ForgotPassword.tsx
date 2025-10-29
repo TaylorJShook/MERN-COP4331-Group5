@@ -55,17 +55,32 @@ const ForgotPassword: React.FC = () => {
         }),
       });
 
+      // Check if response is OK before parsing JSON
+      if (!response.ok) {
+        let errorMessage = 'Invalid verification code.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response isn't JSON (e.g., HTML error page), use status info
+          errorMessage = `Server error: ${response.status}. Please try again.`;
+        }
+        setMessage(errorMessage);
+        return;
+      }
+
+      // Safe to parse JSON - response is OK
       const data = await response.json();
 
-      if (response.ok && data.verified) {
+      if (data.verified) {
         // Code is valid, redirect to reset password page with token
         navigate(`/reset-password?login=${encodeURIComponent(email)}&token=${data.resetToken}&verified=true`);
       } else {
         setMessage(data.error || 'Invalid verification code.');
       }
     } catch (err) {
-      console.error(err);
-      setMessage('A network or server error occurred.');
+      console.error('Network error:', err);
+      setMessage('Unable to connect to server. Please check your connection.');
     } finally {
       setLoading(false);
     }
