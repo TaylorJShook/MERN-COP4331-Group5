@@ -23,36 +23,47 @@ function TodoUI() {
   const userId = ud.id;
 
   async function getTodos(): Promise<void> {
-    const obj = { userId, jwtToken: retrieveToken() };
-    const js = JSON.stringify(obj);
-    try {
-      const response = await fetch(buildPath('api/gettodos'), {
-        method: 'POST',
-        body: js,
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const txt = await response.text();
-      const res = JSON.parse(txt);
-      if (res.error && res.error.length > 0) {
-        setMessage('Error: ' + res.error);
-      } else {
-        const fixedTodos = (res.results || []).map((t: any) => ({
-          ...t,
-          _id: t._id?.$oid || t._id || t.id,
-          StartDate: t.StartDate ? new Date(t.StartDate).toISOString() : null,
-          DueDate: t.dueDate || t.DueDate ? new Date(t.DueDate || t.dueDate).toISOString() : null,
-        })).sort((a: any, b: any) => {
-          const aTime = a.StartDate ? new Date(a.StartDate).getTime() : 0;
-          const bTime = b.StartDate ? new Date(b.StartDate).getTime() : 0;
-          return aTime - bTime;
-        });
-        setTodos(fixedTodos);
-        storeToken(res.jwtToken);
-      }
-    } catch (error: any) {
-      setMessage(error.toString());
+  if (!userId) return;
+
+  const obj = { userId, jwtToken: retrieveToken() };
+  try {
+    const response = await fetch(buildPath('api/gettodos'), {
+      method: 'POST',
+      body: JSON.stringify(obj),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const res = await response.json();
+
+    if (res.error && res.error.length > 0) {
+      setMessage('Error: ' + res.error);
+      return;
     }
+
+    // Normalize and sort
+    const fixedTodos = (res.results || []).map((t: any) => ({
+      _id: t.id || t._id || t._id?.$oid,
+      title: t.title || t.Title || '',
+      description: t.description || t.Description || '',
+      completed: t.completed ?? t.Completed ?? false,
+      createdAt: t.createdAt || t.CreatedAt || new Date(),
+      StartDate: t.StartDate || t.startDate || null,
+      DueDate: t.DueDate || t.dueDate || null,
+    }))
+    .sort((a: any, b: any) => {
+      // Fallback to createdAt if StartDate missing
+      const aTime = a.StartDate ? new Date(a.StartDate).getTime() : new Date(a.createdAt).getTime();
+      const bTime = b.StartDate ? new Date(b.StartDate).getTime() : new Date(b.createdAt).getTime();
+      return aTime - bTime;
+    });
+
+    setTodos(fixedTodos);
+    storeToken(res.jwtToken);
+
+  } catch (error: any) {
+    setMessage(error.toString());
   }
+}
+
 
   async function addTodo(e: any) {
     e.preventDefault();
@@ -256,9 +267,18 @@ function TodoUI() {
                   )}
 
                   <div style={{ marginLeft: '28px', marginTop: '6px', color: '#666' }}>
-                    {todo.StartDate && <div><em>Start:</em> {new Date(todo.StartDate).toLocaleString()}</div>}
-                    {todo.DueDate && <div><em>Due:</em> {new Date(todo.DueDate).toLocaleString()}</div>}
+                    {todo.StartDate && (
+                      <div>
+                        <em>Start:</em> {new Date(todo.StartDate).toLocaleString()}
+                      </div>
+                  )}
+                    {todo.DueDate && (
+                      <div>
+                        <em>Due:</em> {new Date(todo.DueDate).toLocaleString()}
+                      </div>
+                  )}
                   </div>
+
 
                   <button
                     type="button"
