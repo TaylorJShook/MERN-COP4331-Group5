@@ -19,11 +19,11 @@ function TodoUI() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const _ud = localStorage.getItem('user_data');
-  const ud = JSON.parse(String(_ud));
+  const ud = _ud ? JSON.parse(_ud) : {};
   const userId = ud.id;
 
   async function getTodos(): Promise<void> {
-    const obj = { userId: userId, jwtToken: retrieveToken() };
+    const obj = { userId, jwtToken: retrieveToken() };
     const js = JSON.stringify(obj);
     try {
       const response = await fetch(buildPath('api/gettodos'), {
@@ -36,16 +36,16 @@ function TodoUI() {
       if (res.error && res.error.length > 0) {
         setMessage('Error: ' + res.error);
       } else {
-        const fixedTodos = (res.results || [])
-          .map((t: any) => ({
-            ...t,
-            _id: t._id?.$oid || t._id || t.id,
-          }))
-          .sort((a: any, b: any) => {
-            const aTime = new Date(a.StartDate || a.startDate || 0).getTime();
-            const bTime = new Date(b.StartDate || b.startDate || 0).getTime();
-            return aTime - bTime;
-          });
+        const fixedTodos = (res.results || []).map((t: any) => ({
+          ...t,
+          _id: t._id?.$oid || t._id || t.id,
+          StartDate: t.StartDate ? new Date(t.StartDate).toISOString() : null,
+          DueDate: t.dueDate || t.DueDate ? new Date(t.DueDate || t.dueDate).toISOString() : null,
+        })).sort((a: any, b: any) => {
+          const aTime = a.StartDate ? new Date(a.StartDate).getTime() : 0;
+          const bTime = b.StartDate ? new Date(b.StartDate).getTime() : 0;
+          return aTime - bTime;
+        });
         setTodos(fixedTodos);
         storeToken(res.jwtToken);
       }
@@ -54,21 +54,21 @@ function TodoUI() {
     }
   }
 
-  async function addTodo(e: any): Promise<void> {
+  async function addTodo(e: any) {
     e.preventDefault();
     const obj = {
-      userId: userId,
+      userId,
       title,
       description,
-      startDate,
-      dueDate,
+      startDate: startDate ? new Date(startDate).toISOString() : null,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
       jwtToken: retrieveToken(),
     };
-    const js = JSON.stringify(obj);
+
     try {
       const response = await fetch(buildPath('api/addtodo'), {
         method: 'POST',
-        body: js,
+        body: JSON.stringify(obj),
         headers: { 'Content-Type': 'application/json' },
       });
       const txt = await response.text();
@@ -90,17 +90,15 @@ function TodoUI() {
     }
   }
 
-  async function toggleTodoCompletion(id: string): Promise<void> {
+  async function toggleTodoCompletion(id: string) {
     const obj = { id, jwtToken: retrieveToken() };
-    const js = JSON.stringify(obj);
     try {
       const response = await fetch(buildPath('api/check'), {
         method: 'POST',
-        body: js,
+        body: JSON.stringify(obj),
         headers: { 'Content-Type': 'application/json' },
       });
-      const txt = await response.text();
-      const res = JSON.parse(txt);
+      const res = await response.json();
       if (res.error && res.error.length > 0) {
         setMessage('Error: ' + res.error);
       } else {
@@ -112,19 +110,17 @@ function TodoUI() {
     }
   }
 
-  async function deleteTodo(id: string): Promise<void> {
+  async function deleteTodo(id: string) {
     const confirmDelete = window.confirm('Are you sure you want to delete this task?');
     if (!confirmDelete) return;
     const obj = { id, jwtToken: retrieveToken() };
-    const js = JSON.stringify(obj);
     try {
       const response = await fetch(buildPath('api/deletetodo'), {
         method: 'POST',
-        body: js,
+        body: JSON.stringify(obj),
         headers: { 'Content-Type': 'application/json' },
       });
-      const txt = await response.text();
-      const res = JSON.parse(txt);
+      const res = await response.json();
       if (res.error && res.error.length > 0) {
         setMessage('Error: ' + res.error);
       } else {
@@ -140,14 +136,10 @@ function TodoUI() {
   function startEdit(todo: any) {
     setEditingId(todo._id);
     setEditData({
-      title: todo.Title || todo.title || '',
-      description: todo.Description || todo.description || '',
-      startDate: todo.StartDate
-        ? new Date(todo.StartDate).toISOString().slice(0, 16)
-        : '',
-      dueDate: todo.DueDate
-        ? new Date(todo.DueDate).toISOString().slice(0, 16)
-        : '',
+      title: todo.title || todo.Title || '',
+      description: todo.description || todo.Description || '',
+      startDate: todo.StartDate ? new Date(todo.StartDate).toISOString().slice(0, 16) : '',
+      dueDate: todo.DueDate ? new Date(todo.DueDate).toISOString().slice(0, 16) : '',
     });
   }
 
@@ -165,15 +157,13 @@ function TodoUI() {
       dueDate: editData.dueDate || null,
       jwtToken: retrieveToken(),
     };
-    const js = JSON.stringify(obj);
     try {
       const response = await fetch(buildPath('api/edittodo'), {
         method: 'POST',
-        body: js,
+        body: JSON.stringify(obj),
         headers: { 'Content-Type': 'application/json' },
       });
-      const txt = await response.text();
-      const res = JSON.parse(txt);
+      const res = await response.json();
       if (res.error && res.error.length > 0) {
         setMessage('Error: ' + res.error);
       } else {
@@ -200,12 +190,7 @@ function TodoUI() {
           type="button"
           className="buttons"
           onClick={() => setShowAddModal(true)}
-          style={{
-            fontSize: '20px',
-            padding: '10px 20px',
-            borderRadius: '50%',
-            cursor: 'pointer',
-          }}
+          style={{ fontSize: '20px', padding: '10px 20px', borderRadius: '50%', cursor: 'pointer' }}
         >
           +
         </button>
@@ -214,7 +199,7 @@ function TodoUI() {
       {todos.length > 0 ? (
         <ul style={{ textAlign: 'left', display: 'inline-block' }}>
           {todos.map((todo, index) => (
-            <li key={index} style={{ marginBottom: '15px' }}>
+            <li key={index} style={{ marginBottom: '20px' }}>
               {editingId === todo._id ? (
                 <div style={{ marginLeft: '24px' }}>
                   <input
@@ -256,35 +241,30 @@ function TodoUI() {
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <input
                       type="checkbox"
-                      checked={!!todo.Completed}
+                      checked={!!todo.completed}
                       onChange={() => toggleTodoCompletion(todo._id)}
                     />
-                    <strong
-                      style={{
-                        textDecoration: todo.Completed ? 'line-through' : 'none',
-                        opacity: todo.Completed ? 0.6 : 1,
-                      }}
-                    >
-                      {todo.Title || todo.title}
+                    <strong style={{ textDecoration: todo.completed ? 'line-through' : 'none', opacity: todo.completed ? 0.6 : 1 }}>
+                      {todo.title}
                     </strong>
                   </label>
-                  {todo.Description && (
-                    <div style={{ marginLeft: '24px' }}>{todo.Description}</div>
+
+                  {(todo.description) && (
+                    <div style={{ marginLeft: '28px', color: '#555' }}>
+                      {todo.description}
+                    </div>
                   )}
-                  <div style={{ marginLeft: '24px' }}>
-                    <em>Start:</em>{' '}
-                    {todo.StartDate
-                      ? new Date(todo.StartDate).toLocaleString()
-                      : 'N/A'}
-                    {todo.DueDate
-                      ? <> | <em>Due:</em> {new Date(todo.DueDate).toLocaleString()}</>
-                      : null}
+
+                  <div style={{ marginLeft: '28px', marginTop: '6px', color: '#666' }}>
+                    {todo.StartDate && <div><em>Start:</em> {new Date(todo.StartDate).toLocaleString()}</div>}
+                    {todo.DueDate && <div><em>Due:</em> {new Date(todo.DueDate).toLocaleString()}</div>}
                   </div>
+
                   <button
                     type="button"
                     className="buttons"
                     onClick={() => startEdit(todo)}
-                    style={{ marginTop: '5px', marginLeft: '24px' }}
+                    style={{ marginTop: '8px', marginLeft: '24px' }}
                   >
                     Edit
                   </button>
@@ -292,7 +272,7 @@ function TodoUI() {
                     type="button"
                     className="buttons"
                     onClick={() => deleteTodo(todo._id)}
-                    style={{ marginTop: '5px', marginLeft: '10px' }}
+                    style={{ marginTop: '8px', marginLeft: '10px' }}
                   >
                     Delete
                   </button>
