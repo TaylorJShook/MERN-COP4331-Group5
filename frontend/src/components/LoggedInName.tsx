@@ -1,4 +1,7 @@
 function LoggedInName() {
+  const _ud = localStorage.getItem('user_data');
+  const ud = _ud ? JSON.parse(_ud) : { firstName: 'User', lastName: '' };
+
   function doLogout(event: any): void {
     event.preventDefault();
     localStorage.removeItem('user_data');
@@ -8,13 +11,13 @@ function LoggedInName() {
   }
 
   return (
-    <div id="loggedInDiv">
-      <span id="userName">Logged In As John Doe</span>
-      <br />
+    <div className="flex items-center gap-4">
+      <span className="text-lg font-medium">
+        Logged in as {ud.firstName} {ud.lastName}
+      </span>
       <button
         type="button"
-        id="logoutButton"
-        className="buttons"
+        className="bg-white text-[#A8C3A0] px-3 py-1 rounded-md shadow hover:bg-gray-100"
         onClick={doLogout}
       >
         Log Out
