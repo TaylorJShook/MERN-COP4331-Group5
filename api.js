@@ -338,30 +338,30 @@ exports.setApp = function setApp(app, client) {
    * outgoing: { id, error, jwtToken }
    */
   app.post('/api/addtodo', async (req, res) => {
-    const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
-    const { userId, title, description, createdAt, StartDate, startDate, dueDate, priority } = req.body;
-    if (!userId || !title) return res.status(400).json({ id: null, error: 'userId and title are required', jwtToken: '' });
-    if (String(userId) !== String(guard.authUserId)) {
-      return res.status(403).json({ id: null, error: 'Not authorized for this user', jwtToken: guard.refreshedToken });
-    }
+  const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
+  const { userId, title, description, createdAt, startDate, dueDate, priority } = req.body;
+  if (!userId || !title) return res.status(400).json({ id: null, error: 'userId and title are required', jwtToken: '' });
+  if (String(userId) !== String(guard.authUserId)) {
+    return res.status(403).json({ id: null, error: 'Not authorized for this user', jwtToken: guard.refreshedToken });
+  }
 
-    const doc = {
-      UserID: Number(userId) || userId,
-      Title: String(title).trim(),
-      Description: description ? String(description).trim() : '',
-      Completed: false,
-      CreatedAt: createdAt ? new Date(createdAt) : new Date(),
-      StartDate: parseDate(StartDate || startDate),
-      DueDate: parseDate(dueDate),
-      Priority: normalizePriority(priority)
-    };
-    try {
-      const r = await db.collection('Todos').insertOne(doc);
-      return res.status(200).json({ id: r.insertedId, error: '', jwtToken: guard.refreshedToken });
-    } catch (e) {
-      return res.status(500).json({ id: null, error: e.toString(), jwtToken: '' });
-    }
-  });
+  const doc = {
+    UserID: Number(userId) || userId,
+    Title: String(title).trim(),
+    Description: description ? String(description).trim() : '',
+    Completed: false,
+    CreatedAt: createdAt ? new Date(createdAt) : new Date(),
+    StartDate: parseDate(startDate),
+    DueDate: parseDate(dueDate),
+    Priority: normalizePriority(priority)
+  };
+  try {
+    const r = await db.collection('Todos').insertOne(doc);
+    return res.status(200).json({ id: r.insertedId, error: '', jwtToken: guard.refreshedToken });
+  } catch (e) {
+    return res.status(500).json({ id: null, error: e.toString(), jwtToken: '' });
+  }
+});
 
   /**
    * POST /api/deletetodo
@@ -392,48 +392,45 @@ exports.setApp = function setApp(app, client) {
    * outgoing: { modifiedCount, error, jwtToken }
    */
   app.post('/api/edittodo', async (req, res) => {
-    const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
-    const { id, title, description, StartDate, startDate, dueDate, priority, completed } = req.body;
-    if (!id) return res.status(400).json({ modifiedCount: 0, error: 'id is required', jwtToken: '' });
-    if (!ObjectId.isValid(id)) return res.status(400).json({ modifiedCount: 0, error: 'invalid id format', jwtToken: '' });
+  const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
+  const { id, title, description, startDate, dueDate, priority, completed } = req.body;
+  if (!id) return res.status(400).json({ modifiedCount: 0, error: 'id is required', jwtToken: '' });
+  if (!ObjectId.isValid(id)) return res.status(400).json({ modifiedCount: 0, error: 'invalid id format', jwtToken: '' });
 
-    const $set = {}; const $unset = {};
-    if (typeof title === 'string') $set.Title = title.trim();
-    if (typeof description === 'string') $set.Description = description.trim();
-    if (typeof completed === 'boolean') $set.Completed = completed;
+  const $set = {}; const $unset = {};
+  if (typeof title === 'string') $set.Title = title.trim();
+  if (typeof description === 'string') $set.Description = description.trim();
+  if (typeof completed === 'boolean') $set.Completed = completed;
+  if (startDate === null) $unset.StartDate = '';
+  else if (typeof startDate !== 'undefined') {
+    const d = parseDate(startDate);
+    if (!d) return res.status(400).json({ modifiedCount: 0, error: 'startDate is invalid', jwtToken: '' });
+    $set.StartDate = d;
+  }
+  if (dueDate === null) $unset.DueDate = '';
+  else if (typeof dueDate !== 'undefined') {
+    const d = parseDate(dueDate);
+    if (!d) return res.status(400).json({ modifiedCount: 0, error: 'dueDate is invalid', jwtToken: '' });
+    $set.DueDate = d;
+  }
+  if (typeof priority !== 'undefined') $set.Priority = normalizePriority(priority);
+  if (!Object.keys($set).length && !Object.keys($unset).length) {
+    return res.status(400).json({ modifiedCount: 0, error: 'no fields to update', jwtToken: '' });
+  }
 
-    const startDateValue = StartDate !== undefined ? StartDate : startDate;
-    if (startDateValue === null) $unset.StartDate = '';
-    else if (typeof startDateValue !== 'undefined') {
-      const d = parseDate(startDateValue);
-      if (!d) return res.status(400).json({ modifiedCount: 0, error: 'startDate is invalid', jwtToken: '' });
-      $set.StartDate = d;
+  try {
+    const r = await db.collection('Todos').updateOne(
+      { _id: new ObjectId(id), ...ownerFilter(guard.authUserId) },
+      { ...(Object.keys($set).length ? { $set } : {}), ...(Object.keys($unset).length ? { $unset } : {}) }
+    );
+    if (r.matchedCount === 0) {
+      return res.status(403).json({ modifiedCount: 0, error: 'Not authorized to edit this todo', jwtToken: guard.refreshedToken });
     }
-
-    if (dueDate === null) $unset.DueDate = '';
-    else if (typeof dueDate !== 'undefined') {
-      const d = parseDate(dueDate);
-      if (!d) return res.status(400).json({ modifiedCount: 0, error: 'dueDate is invalid', jwtToken: '' });
-      $set.DueDate = d;
-    }
-    if (typeof priority !== 'undefined') $set.Priority = normalizePriority(priority);
-    if (!Object.keys($set).length && !Object.keys($unset).length) {
-      return res.status(400).json({ modifiedCount: 0, error: 'no fields to update', jwtToken: '' });
-    }
-
-    try {
-      const r = await db.collection('Todos').updateOne(
-        { _id: new ObjectId(id), ...ownerFilter(guard.authUserId) },
-        { ...(Object.keys($set).length ? { $set } : {}), ...(Object.keys($unset).length ? { $unset } : {}) }
-      );
-      if (r.matchedCount === 0) {
-        return res.status(403).json({ modifiedCount: 0, error: 'Not authorized to edit this todo', jwtToken: guard.refreshedToken });
-      }
-      return res.status(200).json({ modifiedCount: r.modifiedCount, error: '', jwtToken: guard.refreshedToken });
-    } catch (e) {
-      return res.status(500).json({ modifiedCount: 0, error: e.toString(), jwtToken: '' });
-    }
-  });
+    return res.status(200).json({ modifiedCount: r.modifiedCount, error: '', jwtToken: guard.refreshedToken });
+  } catch (e) {
+    return res.status(500).json({ modifiedCount: 0, error: e.toString(), jwtToken: '' });
+  }
+});
 
   /**
    * POST /api/gettodos
@@ -442,29 +439,29 @@ exports.setApp = function setApp(app, client) {
    * outgoing: { results: [{ title, description, completed, createdAt, startDate, dueDate, priority, id }], error, jwtToken }
    */
   app.post('/api/gettodos', async (req, res) => {
-    const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
-    const { userId } = req.body;
-    if (!userId) return res.status(400).json({ results: [], error: 'userId is required', jwtToken: '' });
-    if (String(userId) !== String(guard.authUserId)) {
-      return res.status(403).json({ results: [], error: 'Not authorized for this user', jwtToken: guard.refreshedToken });
-    }
-    try {
-      const results = await db.collection('Todos').find(ownerFilter(guard.authUserId)).sort({ CreatedAt: -1 }).toArray();
-      const formatted = results.map(t => ({
-        title: t.Title,
-        description: t.Description,
-        completed: t.Completed,
-        createdAt: t.CreatedAt,
-        StartDate: t.StartDate,
-        dueDate: t.DueDate,
-        priority: t.Priority,
-        id: t._id
-      }));
-      return res.status(200).json({ results: formatted, error: '', jwtToken: guard.refreshedToken });
-    } catch (e) {
-      return res.status(500).json({ results: [], error: e.toString(), jwtToken: '' });
-    }
-  });
+  const guard = requireJwt(req, res); if (!guard.ok) return guard.end;
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ results: [], error: 'userId is required', jwtToken: '' });
+  if (String(userId) !== String(guard.authUserId)) {
+    return res.status(403).json({ results: [], error: 'Not authorized for this user', jwtToken: guard.refreshedToken });
+  }
+  try {
+    const results = await db.collection('Todos').find(ownerFilter(guard.authUserId)).sort({ CreatedAt: -1 }).toArray();
+    const formatted = results.map(t => ({
+      title: t.Title,
+      description: t.Description,
+      completed: t.Completed,
+      createdAt: t.CreatedAt,
+      StartDate: t.StartDate,
+      dueDate: t.DueDate,
+      priority: t.Priority,
+      id: t._id
+    }));
+    return res.status(200).json({ results: formatted, error: '', jwtToken: guard.refreshedToken });
+  } catch (e) {
+    return res.status(500).json({ results: [], error: e.toString(), jwtToken: '' });
+  }
+});
 
   /**
    * POST /api/check
