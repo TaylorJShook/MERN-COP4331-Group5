@@ -257,16 +257,43 @@ exports.setApp = function setApp(app, client) {
   });
 
   /**
+   * POST /api/verify-reset-code
+   * Purpose: Verify a 6-digit reset code without consuming the reset token.
+   * incoming: { login, email, code } (login OR email required)
+   * outgoing: { verified, error }
+   */
+  app.post('/api/verify-reset-code', async (req, res) => {
+    const { login, email, code } = req.body;
+    if ((!login && !email) || !code) return res.status(400).json({ verified: false, error: 'login or email, code required' });
+    try {
+      // Allow either login OR email to find the user
+      const query = login ? { Login: login } : { Email: email };
+      const u = await db.collection('Users').findOne(query);
+      if (!u) return res.status(200).json({ verified: false, error: 'user not found' });
+      if (!u.ResetCode || !u.ResetExpires) return res.status(200).json({ verified: false, error: 'no reset requested' });
+      if (new Date() > new Date(u.ResetExpires)) return res.status(200).json({ verified: false, error: 'code expired' });
+      if (String(u.ResetCode) !== String(code)) return res.status(200).json({ verified: false, error: 'invalid code' });
+
+      // Code is valid - return success WITH the reset token for password reset
+      return res.status(200).json({ verified: true, resetToken: u.ResetToken, username: u.Login, error: '' });
+    } catch (e) {
+      return res.status(500).json({ verified: false, error: e.toString() });
+    }
+  });
+
+  /**
    * POST /api/reset-password-with-code
    * Purpose: Change password using a 6-digit code.
-   * incoming: { login, code, newPassword }
+   * incoming: { login, email, code, newPassword } (login OR email required)
    * outgoing: { error }
    */
   app.post('/api/reset-password-with-code', async (req, res) => {
-    const { login, code, newPassword } = req.body;
-    if (!login || !code || !newPassword) return res.status(400).json({ error: 'login, code, newPassword required' });
+    const { login, email, code, newPassword } = req.body;
+    if ((!login && !email) || !code || !newPassword) return res.status(400).json({ error: 'login or email, code, newPassword required' });
     try {
-      const u = await db.collection('Users').findOne({ Login: login });
+      // Allow either login OR email to find the user
+      const query = login ? { Login: login } : { Email: email };
+      const u = await db.collection('Users').findOne(query);
       if (!u) return res.status(200).json({ error: 'user not found' });
       if (!u.ResetCode || !u.ResetExpires) return res.status(200).json({ error: 'no reset requested' });
       if (new Date() > new Date(u.ResetExpires)) return res.status(200).json({ error: 'code expired' });
@@ -282,14 +309,16 @@ exports.setApp = function setApp(app, client) {
   /**
    * POST /api/reset-password-with-token
    * Purpose: Change password using a reset token (magic link flow).
-   * incoming: { login, token, newPassword }
+   * incoming: { login, email, token, newPassword } (login OR email required)
    * outgoing: { error }
    */
   app.post('/api/reset-password-with-token', async (req, res) => {
-    const { login, token: rtoken, newPassword } = req.body;
-    if (!login || !rtoken || !newPassword) return res.status(400).json({ error: 'login, token, newPassword required' });
+    const { login, email, token: rtoken, newPassword } = req.body;
+    if ((!login && !email) || !rtoken || !newPassword) return res.status(400).json({ error: 'login or email, token, newPassword required' });
     try {
-      const u = await db.collection('Users').findOne({ Login: login });
+      // Allow either login OR email to find the user
+      const query = login ? { Login: login } : { Email: email };
+      const u = await db.collection('Users').findOne(query);
       if (!u) return res.status(200).json({ error: 'user not found' });
       if (!u.ResetToken || !u.ResetExpires) return res.status(200).json({ error: 'no reset requested' });
       if (new Date() > new Date(u.ResetExpires)) return res.status(200).json({ error: 'token expired' });

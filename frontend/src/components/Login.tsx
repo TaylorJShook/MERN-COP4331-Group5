@@ -162,7 +162,7 @@ function Login() {
           </h2>
           
           <form onSubmit={doLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-            {/* Email Field */}
+            {/* Username Field */}
             <div style={{ textAlign: 'left', width: '100%' }}>
               <label htmlFor="loginName" style={{ 
                 display: 'block', 
@@ -171,7 +171,7 @@ function Login() {
                 color: '#000000', 
                 marginBottom: '0.5rem' 
               }}>
-                Email
+                Username
               </label>
               <input
                 type="text"
