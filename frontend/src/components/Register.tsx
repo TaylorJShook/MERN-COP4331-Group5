@@ -162,6 +162,7 @@ const Register: React.FC = () => {
                   onChange={(e) => setFirstName(e.target.value)}
                   required
                   style={{
+                    color: 'black',
                     width: '100%',
                     padding: '0.75rem',
                     border: '1px solid #d0d0d0',
@@ -193,6 +194,7 @@ const Register: React.FC = () => {
                   onChange={(e) => setLastName(e.target.value)}
                   required
                   style={{
+                    color: 'black',
                     width: '100%',
                     padding: '0.75rem',
                     border: '1px solid #d0d0d0',
@@ -224,6 +226,7 @@ const Register: React.FC = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   style={{
+                    color: 'black',
                     width: '100%',
                     padding: '0.75rem',
                     border: '1px solid #d0d0d0',
@@ -255,6 +258,7 @@ const Register: React.FC = () => {
                   onChange={(e) => setLogin(e.target.value)}
                   required
                   style={{
+                    color: 'black',
                     width: '100%',
                     padding: '0.75rem',
                     border: '1px solid #d0d0d0',
@@ -286,6 +290,7 @@ const Register: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   style={{
+                    color: 'black',
                     width: '100%',
                     padding: '0.75rem',
                     border: '1px solid #d0d0d0',

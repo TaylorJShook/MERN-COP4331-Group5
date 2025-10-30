@@ -181,6 +181,7 @@ function Login() {
                 onChange={(e) => setLoginName(e.target.value)}
                 required
                 style={{
+                  color: 'black',
                   width: '100%',
                   padding: '0.75rem',
                   border: '1px solid #d0d0d0',
@@ -212,6 +213,7 @@ function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 style={{
+                  color: 'black',
                   width: '100%',
                   padding: '0.75rem',
                   border: '1px solid #d0d0d0',
