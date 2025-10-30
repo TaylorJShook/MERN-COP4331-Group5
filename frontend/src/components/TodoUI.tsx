@@ -8,8 +8,8 @@ function TodoUI() {
   const [todos, setTodos] = useState<any[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [dueTime, setDueTime] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = React.useState<any>({
     title: "",
@@ -18,6 +18,7 @@ function TodoUI() {
     dueDate: "",
   });
   const [showAddModal, setShowAddModal] = useState(false);
+
 
   const _ud = localStorage.getItem("user_data");
   const ud = _ud ? JSON.parse(_ud) : {};
@@ -41,7 +42,6 @@ function TodoUI() {
 
   async function getTodos(): Promise<void> {
     if (!userId) return;
-
     const obj = { userId, jwtToken: retrieveToken() };
     try {
       const response = await fetch(buildPath("api/gettodos"), {
@@ -56,7 +56,6 @@ function TodoUI() {
         return;
       }
 
-      // Normalize and sort
       const fixedTodos = (res.results || [])
         .map((t: any) => ({
           _id: t.id || t._id || t._id?.$oid,
@@ -64,11 +63,10 @@ function TodoUI() {
           description: t.description || t.Description || "",
           completed: t.completed ?? t.Completed ?? false,
           createdAt: t.createdAt || t.CreatedAt || new Date(),
-          StartDate: t.StartDate || t.startDate || null,
-          DueDate: t.DueDate || t.dueDate || null,
+          StartDate: t.StartDate || t.startDate || t.Startdate || null,
+          DueDate: t.DueDate || t.dueDate || t.Duedate || null,
         }))
         .sort((a: any, b: any) => {
-          // Fallback to createdAt if StartDate missing
           const aTime = a.StartDate
             ? new Date(a.StartDate).getTime()
             : new Date(a.createdAt).getTime();
@@ -85,14 +83,55 @@ function TodoUI() {
     }
   }
 
+  async function moveUnfinishedTodosToNextDay() {
+    if (!todos.length) return;
+    const today = new Date().toDateString();
+    const storedDate = localStorage.getItem("lastCheckedDate");
+
+    if (storedDate === today) return;
+    localStorage.setItem("lastCheckedDate", today);
+
+    for (const todo of todos) {
+      if (!todo.completed && todo.StartDate) {
+        try {
+          const obj = { id: todo._id, jwtToken: retrieveToken() };
+          const response = await fetch(buildPath("api/next-day"), {
+            method: "POST",
+            body: JSON.stringify(obj),
+            headers: { "Content-Type": "application/json" },
+          });
+          const res = await response.json();
+          if (res.error && res.error.length > 0) continue;
+          storeToken(res.jwtToken);
+        } catch {}
+      }
+    }
+    await getTodos();
+  }
+
   async function addTodo(e: any) {
     e.preventDefault();
+    const baseDate = new Date(displayDate);
+    baseDate.setHours(0, 0, 0, 0);
+
+    const startDate = startTime
+      ? new Date(
+          `${baseDate.toISOString().split("T")[0]}T${startTime}:00`
+        ).toISOString()
+      : new Date(baseDate).toISOString();
+
+    const dueDate = dueTime
+      ? new Date(
+          `${baseDate.toISOString().split("T")[0]}T${dueTime}:00`
+        ).toISOString()
+      : null;
+
     const obj = {
       userId,
       title,
       description,
-      startDate: startDate ? new Date(startDate).toISOString() : null,
-      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+      startDate,
+      dueDate,
       jwtToken: retrieveToken(),
     };
 
@@ -111,8 +150,8 @@ function TodoUI() {
         storeToken(res.jwtToken);
         setTitle("");
         setDescription("");
-        setStartDate("");
-        setDueDate("");
+        setStartTime("");
+        setDueTime("");
         setShowAddModal(false);
         await getTodos();
       }
@@ -216,7 +255,11 @@ function TodoUI() {
 
   useEffect(() => {
     getTodos();
-  }, []);
+  }, [displayDate]);
+
+  useEffect(() => {
+    moveUnfinishedTodosToNextDay();
+  }, [todos]);
 
   return (
     <div id="todoUIDiv" style={{ marginTop: "20px", textAlign: "center" }}>
@@ -270,169 +313,169 @@ function TodoUI() {
         </button>
       </div>
 
-      {/* Filter todos by selected date */}
       {todos.filter((todo) => {
         if (!todo.StartDate) return false;
         const start = new Date(todo.StartDate);
-        const end = todo.DueDate ? new Date(todo.DueDate) : start;
         const selected = new Date(displayDate);
-        selected.setHours(0, 0, 0, 0);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(0, 0, 0, 0);
-        return selected >= start && selected <= end;
+        return start.toDateString() === selected.toDateString();
       }).length > 0 ? (
         <ul style={{ textAlign: "left", display: "inline-block" }}>
           {todos
             .filter((todo) => {
               if (!todo.StartDate) return false;
               const start = new Date(todo.StartDate);
-              const end = todo.DueDate ? new Date(todo.DueDate) : start;
               const selected = new Date(displayDate);
-              selected.setHours(0, 0, 0, 0);
-              start.setHours(0, 0, 0, 0);
-              end.setHours(0, 0, 0, 0);
-              return selected >= start && selected <= end;
+              return start.toDateString() === selected.toDateString();
             })
+            .sort(
+              (a, b) =>
+                new Date(a.StartDate).getTime() -
+                new Date(b.StartDate).getTime()
+            )
             .map((todo, index) => (
               <li key={index} style={{ marginBottom: "20px" }}>
-                <li key={index} style={{ marginBottom: "20px" }}>
-                  {editingId === todo._id ? (
-                    <div style={{ marginLeft: "24px" }}>
+                {editingId === todo._id ? (
+                  <div style={{ marginLeft: "24px" }}>
+                    <input
+                      type="text"
+                      value={editData.title}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          title: e.target.value,
+                        })
+                      }
+                      placeholder="Title"
+                    />
+                    <br />
+                    <textarea
+                      value={editData.description}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          description: e.target.value,
+                        })
+                      }
+                      rows={3}
+                    />
+                    <br />
+                    <label>Start Date & Time: </label>
+                    <input
+                      type="datetime-local"
+                      value={editData.startDate}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          startDate: e.target.value,
+                        })
+                      }
+                    />
+                    <br />
+                    <label>Due Date & Time: </label>
+                    <input
+                      type="datetime-local"
+                      value={editData.dueDate}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          dueDate: e.target.value,
+                        })
+                      }
+                    />
+                    <br />
+                    <button
+                      type="button"
+                      className="buttons"
+                      onClick={() => saveEdit(todo._id)}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="buttons"
+                      onClick={cancelEdit}
+                      style={{ marginLeft: "10px" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
                       <input
-                        type="text"
-                        value={editData.title}
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            title: e.target.value,
-                          })
-                        }
-                        placeholder="Title"
+                        type="checkbox"
+                        checked={!!todo.completed}
+                        onChange={() => toggleTodoCompletion(todo._id)}
                       />
-                      <br />
-                      <textarea
-                        value={editData.description}
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            description: e.target.value,
-                          })
-                        }
-                        rows={3}
-                      />
-                      <br />
-                      <label>Start Date & Time: </label>
-                      <input
-                        type="datetime-local"
-                        value={editData.startDate}
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            startDate: e.target.value,
-                          })
-                        }
-                      />
-                      <br />
-                      <label>Due Date & Time: </label>
-                      <input
-                        type="datetime-local"
-                        value={editData.dueDate}
-                        onChange={(e) =>
-                          setEditData({
-                            ...editData,
-                            dueDate: e.target.value,
-                          })
-                        }
-                      />
-                      <br />
-                      <button
-                        type="button"
-                        className="buttons"
-                        onClick={() => saveEdit(todo._id)}
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        className="buttons"
-                        onClick={cancelEdit}
-                        style={{ marginLeft: "10px" }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <label
+                      <strong
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
+                          textDecoration: todo.completed
+                            ? "line-through"
+                            : "none",
+                          opacity: todo.completed ? 0.6 : 1,
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={!!todo.completed}
-                          onChange={() => toggleTodoCompletion(todo._id)}
-                        />
-                        <strong
-                          style={{
-                            textDecoration: todo.completed
-                              ? "line-through"
-                              : "none",
-                            opacity: todo.completed ? 0.6 : 1,
-                          }}
-                        >
-                          {todo.title}
-                        </strong>
-                      </label>
+                        {todo.title}
+                      </strong>
+                    </label>
 
-                      {todo.description && (
-                        <div style={{ marginLeft: "28px", color: "#555" }}>
-                          {todo.description}
+                    {todo.description && (
+                      <div style={{ marginLeft: "28px", color: "#555" }}>
+                        {todo.description}
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        marginLeft: "28px",
+                        marginTop: "6px",
+                        color: "#666",
+                      }}
+                    >
+                      {todo.StartDate && (
+                        <div>
+                          <em>Start:</em>{" "}
+                          {new Date(todo.StartDate).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </div>
                       )}
+                      {todo.DueDate && (
+                        <div>
+                          <em>Due:</em>{" "}
+                          {new Date(todo.DueDate).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </div>
+                      )}
+                    </div>
 
-                      <div
-                        style={{
-                          marginLeft: "28px",
-                          marginTop: "6px",
-                          color: "#666",
-                        }}
-                      >
-                        {todo.StartDate && (
-                          <div>
-                            <em>Start:</em>{" "}
-                            {new Date(todo.StartDate).toLocaleString()}
-                          </div>
-                        )}
-                        {todo.DueDate && (
-                          <div>
-                            <em>Due:</em>{" "}
-                            {new Date(todo.DueDate).toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        className="buttons"
-                        onClick={() => startEdit(todo)}
-                        style={{ marginTop: "8px", marginLeft: "24px" }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="buttons"
-                        onClick={() => deleteTodo(todo._id)}
-                        style={{ marginTop: "8px", marginLeft: "10px" }}
-                      >
-                        Delete
-                      </button>
-                    </>
-                  )}
-                </li>
+                    <button
+                      type="button"
+                      className="buttons"
+                      onClick={() => startEdit(todo)}
+                      style={{ marginTop: "8px", marginLeft: "24px" }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="buttons"
+                      onClick={() => deleteTodo(todo._id)}
+                      style={{ marginTop: "8px", marginLeft: "10px" }}
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </li>
             ))}
         </ul>
@@ -481,19 +524,19 @@ function TodoUI() {
                 style={{ width: "100%" }}
               />
               <br />
-              <label>Start Date & Time: </label>
+              <label>Start Time: </label>
               <input
-                type="datetime-local"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
                 style={{ width: "100%" }}
               />
               <br />
-              <label>Due Date & Time: </label>
+              <label>Due Time: </label>
               <input
-                type="datetime-local"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+                type="time"
+                value={dueTime}
+                onChange={(e) => setDueTime(e.target.value)}
                 style={{ width: "100%" }}
               />
               <br />
