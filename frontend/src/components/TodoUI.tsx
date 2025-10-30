@@ -23,18 +23,6 @@ function TodoUI() {
   const ud = _ud ? JSON.parse(_ud) : {};
   const userId = ud.id;
 
-  const isToday = (() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selected = new Date(displayDate);
-    selected.setHours(0, 0, 0, 0);
-    return (
-      today.getFullYear() === selected.getFullYear() &&
-      today.getMonth() === selected.getMonth() &&
-      today.getDate() === selected.getDate()
-    );
-  })();
-
   const handlePrevDate = () => {
     setDisplayDate((prev) => {
       const newDate = new Date(prev);
