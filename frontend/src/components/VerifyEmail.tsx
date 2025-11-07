@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
@@ -7,9 +7,26 @@ const VerifyEmail: React.FC = () => {
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(true);
   const navigate = useNavigate();
 
   const pendingLogin = localStorage.getItem('pendingLogin') || '';
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowModal(false);
+    };
+    if (showModal) {
+      document.addEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = '';
+    };
+  }, [showModal]);
 
   const handleVerify = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,7 +48,7 @@ const VerifyEmail: React.FC = () => {
         setMessage(data.error);
       } else {
         localStorage.removeItem('pendingLogin');
-        navigate('/login');
+        navigate('/');
       }
     } catch (err) {
       console.error(err);
@@ -42,180 +59,82 @@ const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <div style={{ margin: 0, padding: 0 }}>
-      {/* Header Banner - Light Green - Full Width */}
-      <div
-        style={{
-          backgroundColor: '#AECEB3',
-          padding: '1.5rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',            
-          boxSizing: 'border-box',
-          minHeight: '4rem',
-          marginTop: 0,
-          marginBottom: 0,
-          position: 'sticky',       // optional: keep attached to top
-          top: 0,
-          zIndex: 1000,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            width: '100%',
-            padding: '0 1rem',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#000000',
-              margin: 0,
-            }}
-          >
-            Daily Task Planner
-          </h1>
+    <div className="login-page">
+      {/* Animated background blobs */}
+      <div className="blob blob--indigo" aria-hidden="true" />
+      <div className="blob blob--mint" aria-hidden="true" />
+      <div className="blob blob--pink" aria-hidden="true" />
+
+      {/* Top bar */}
+      <header className="topbar">
+        <div className="topbar__inner">
+          <span className="brand">Daily Task Planner</span>
+          <a className="topbar__link" href="/">
+            Sign in
+          </a>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content Container */}
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: 'white', 
-        display: 'flex', 
-        flexDirection: 'column' 
-      }}>
-        {/* Main Content */}
-        <div style={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          padding: '3rem 1rem',
-          gap: '2rem'
-        }}>
-          {/* Main Title */}
-          <h1 style={{ 
-            fontSize: '3rem', 
-            fontWeight: 'bold', 
-            color: '#000000', 
-            margin: 0,
-            textAlign: 'center'
-          }}>
-            Daily Task Planner
-          </h1>
+      {/* Hero */}
+      <section className="hero">
+        <h1 className="hero__title">Daily Task Planner</h1>
+        <p className="hero__sub">Organize your day, achieve your goals</p>
+      </section>
 
-          {/* Subtitle */}
-          <p style={{ 
-            color: '#000000', 
-            margin: 0,
-            fontSize: '1.125rem',
-            textAlign: 'center'
-          }}>
-            Use our app to track your tasks!
-          </p>
-
-          {/* Verify Email Form */}
-          <div style={{ 
-            backgroundColor: '#BCC7BD', 
-            borderRadius: '0.5rem', 
-            padding: '2rem', 
-            width: '100%', 
-            maxWidth: '28rem',
-            border: '1px solid #e0e0e0'
-          }}>
-            <h2 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '600', 
-              marginBottom: '1.5rem', 
-              color: '#000000',
-              margin: '0 0 1.5rem 0'
-            }}>
-              Verify Your Email
-            </h2>
-            
-            <p style={{ 
-              textAlign: 'center', 
-              marginBottom: '1.5rem',
-              color: '#000000',
-              fontSize: '0.875rem'
-            }}>
-              A verification code was sent to the email associated with <strong>{pendingLogin}</strong>.
-            </p>
-            
-            <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-              {/* Verification Code Field */}
-              <div style={{ textAlign: 'left', width: '100%' }}>
-                <label htmlFor="code" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#000000', 
-                  marginBottom: '0.5rem' 
-                }}>
-                  Verification Code
-                </label>
-                <input
-                  type="text"
-                  id="code"
-                  placeholder="Value"
-                  value={code}
-                  onChange={e => setCode(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d0d0d0',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              {/* Verify Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  borderRadius: '0.375rem',
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  backgroundColor: loading ? '#9ca3af' : '#343a40',
-                  color: 'white',
-                  marginBottom: '1rem',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {loading ? 'Verifying...' : 'Verify Email'}
-              </button>
-
-              {/* Error Message */}
-              {message && (
-                <div style={{ 
-                  color: '#dc2626', 
-                  fontSize: '0.875rem', 
-                  textAlign: 'center', 
-                  marginBottom: '1rem',
-                  width: '100%'
-                }}>
-                  {message}
+      {/* Verification Modal */}
+      {showModal && (
+        <>
+          <div className="backdrop" onClick={() => setShowModal(false)} />
+          <main className="login-modal show" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button
+              className="modal-close"
+              onClick={() => setShowModal(false)}
+              aria-label="Close verification form"
+            >
+              ×
+            </button>
+            <div className="glass">
+              <h2 className="glass__title" id="modal-title">Verify Your Email</h2>
+              <p style={{ 
+                textAlign: 'center', 
+                marginBottom: '1.5rem',
+                color: 'var(--muted)',
+                fontSize: 'var(--font-sm)'
+              }}>
+                A verification code was sent to the email associated with <strong>{pendingLogin}</strong>.
+              </p>
+              <form className="form" onSubmit={handleVerify} noValidate>
+                <label className="label" htmlFor="code">Verification Code</label>
+                <div className="input">
+                  <input
+                    id="code"
+                    type="text"
+                    autoComplete="one-time-code"
+                    placeholder="Enter 6-digit code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    maxLength={6}
+                    required
+                  />
                 </div>
-              )}
-            </form>
-          </div>
-        </div>
-      </div>
+
+                {message && <div className="error">{message}</div>}
+
+                <button type="submit" className="btn btn--primary" disabled={loading}>
+                  {loading ? 'Verifying…' : 'Verify Email'}
+                </button>
+
+                <p className="helper">
+                  Didn't receive a code?{' '}
+                  <a className="link" href="/register">
+                    Try registering again
+                  </a>
+                </p>
+              </form>
+            </div>
+          </main>
+        </>
+      )}
     </div>
   );
 };
