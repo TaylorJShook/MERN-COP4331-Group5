@@ -454,6 +454,7 @@ exports.setApp = function setApp(app, client) {
       createdAt: t.CreatedAt,
       StartDate: t.StartDate,
       dueDate: t.DueDate,
+      CompletedAt: t.CompletedAt || null,
       priority: t.Priority,
       id: t._id
     }));

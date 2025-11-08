@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
@@ -11,8 +11,25 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(true);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowModal(false);
+    };
+    if (showModal) {
+      document.addEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = '';
+    };
+  }, [showModal]);
 
   const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,321 +63,153 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div style={{ margin: 0, padding: 0 }}>
-      {/* Header Banner - Light Green - Full Width */}
-      <div
-        style={{
-          backgroundColor: '#AECEB3',
-          padding: '1.5rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',            
-          boxSizing: 'border-box',
-          minHeight: '4rem',
-          marginTop: 0,
-          marginBottom: 0,
-          position: 'sticky',       // optional: keep attached to top
-          top: 0,
-          zIndex: 1000,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            width: '100%',
-            padding: '0 1rem',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#000000',
-              margin: 0,
-            }}
-          >
-            Daily Task Planner
-          </h1>
+    <div className="login-page">
+      {/* Animated background blobs */}
+      <div className="blob blob--indigo" aria-hidden="true" />
+      <div className="blob blob--mint" aria-hidden="true" />
+      <div className="blob blob--pink" aria-hidden="true" />
+
+      {/* Top bar */}
+      <header className="topbar">
+        <div className="topbar__inner">
+          <span className="brand">Daily Task Planner</span>
+          <a className="topbar__link" href="/">
+            Sign in
+          </a>
         </div>
+      </header>
+
+      {/* Hero */}
+      <section className="hero">
+        <h1 className="hero__title">Daily Task Planner</h1>
+        <p className="hero__sub">Organize your day, achieve your goals</p>
+        <ul className="hero-list">
+          <li><span className="checkmark">✓</span> Plan your tasks</li>
+          <li><span className="checkmark">✓</span> Set reminders</li>
+        </ul>
+      </section>
+
+      {/* Feature Cards */}
+      <section className="features">
+        <div className="feature-card">
+          <div className="feature-icon">📋</div>
+          <h3>Task Management</h3>
+          <p>Create and organize your daily tasks effortlessly</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">⏰</div>
+          <h3>Smart Reminders</h3>
+          <p>Never miss an important deadline again</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">📊</div>
+          <h3>Track Progress</h3>
+          <p>Monitor your productivity and achievements</p>
       </div>
+      </section>
 
-      {/* Main Content Container */}
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: 'white', 
-        display: 'flex', 
-        flexDirection: 'column' 
-      }}>
-        {/* Main Content */}
-        <div style={{ 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          padding: '3rem 1rem',
-          gap: '2rem'
-        }}>
-          {/* Main Title */}
-          <h1 style={{ 
-            fontSize: '3rem', 
-            fontWeight: 'bold', 
-            color: '#000000', 
-            margin: 0,
-            textAlign: 'center'
-          }}>
-            Daily Task Planner
-          </h1>
-
-          {/* Subtitle */}
-          <p style={{ 
-            color: '#000000', 
-            margin: 0,
-            fontSize: '1.125rem',
-            textAlign: 'center'
-          }}>
-            Use our app to track your tasks!
-          </p>
-
-          {/* Register Form */}
-          <div style={{ 
-            backgroundColor: '#BCC7BD', 
-            borderRadius: '0.5rem', 
-            padding: '2rem', 
-            width: '100%', 
-            maxWidth: '28rem',
-            border: '1px solid #e0e0e0'
-          }}>
-            <h2 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '600', 
-              marginBottom: '1.5rem', 
-              color: '#000000',
-              margin: '0 0 1.5rem 0'
-            }}>
-              Create Account
-            </h2>
-            
-            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-              {/* First Name Field */}
-              <div style={{ textAlign: 'left', width: '100%' }}>
-                <label htmlFor="firstName" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#000000', 
-                  marginBottom: '0.5rem' 
-                }}>
-                  First Name
-                </label>
+      {/* Registration Modal */}
+      {showModal && (
+        <>
+          <div className="backdrop" onClick={() => setShowModal(false)} />
+          <main className="login-modal show" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div className="glass">
+              <button
+                className="modal-close"
+                onClick={() => setShowModal(false)}
+                aria-label="Close registration form"
+              >
+                ×
+              </button>
+              <h2 className="glass__title" id="modal-title">Create Account</h2>
+              <form className="form" onSubmit={handleRegister} noValidate>
+                <div className="form-row">
+                  <div>
+                    <label className="label" htmlFor="firstName">First Name</label>
+                    <div className="input">
                 <input
+                        id="firstName"
                   type="text"
-                  id="firstName"
-                  placeholder="Value"
+                        autoComplete="given-name"
+                        placeholder="First name"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
-                  style={{
-                    color: 'black',
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d0d0d0',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                    boxSizing: 'border-box'
-                  }}
                 />
               </div>
-
-              {/* Last Name Field */}
-              <div style={{ textAlign: 'left', width: '100%' }}>
-                <label htmlFor="lastName" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#000000', 
-                  marginBottom: '0.5rem' 
-                }}>
-                  Last Name
-                </label>
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="lastName">Last Name</label>
+                    <div className="input">
                 <input
+                        id="lastName"
                   type="text"
-                  id="lastName"
-                  placeholder="Value"
+                        autoComplete="family-name"
+                        placeholder="Last name"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
-                  style={{
-                    color: 'black',
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d0d0d0',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                    boxSizing: 'border-box'
-                  }}
-                />
+                      />
+                    </div>
+                  </div>
               </div>
 
-              {/* Email Field */}
-              <div style={{ textAlign: 'left', width: '100%' }}>
-                <label htmlFor="email" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#000000', 
-                  marginBottom: '0.5rem' 
-                }}>
-                  Email
-                </label>
+                <label className="label" htmlFor="email">Email</label>
+                <div className="input">
                 <input
+                    id="email"
                   type="email"
-                  id="email"
-                  placeholder="Value"
+                    autoComplete="email"
+                    placeholder="grace@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  style={{
-                    color: 'black',
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d0d0d0',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                    boxSizing: 'border-box'
-                  }}
                 />
               </div>
 
-              {/* Username Field */}
-              <div style={{ textAlign: 'left', width: '100%' }}>
-                <label htmlFor="login" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#000000', 
-                  marginBottom: '0.5rem' 
-                }}>
-                  Username
-                </label>
+                <label className="label" htmlFor="login">Username</label>
+                <div className="input">
                 <input
+                    id="login"
                   type="text"
-                  id="login"
-                  placeholder="Value"
+                    autoComplete="username"
+                    placeholder="Enter your username"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   required
-                  style={{
-                    color: 'black',
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d0d0d0',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                    boxSizing: 'border-box'
-                  }}
                 />
               </div>
 
-              {/* Password Field */}
-              <div style={{ textAlign: 'left', width: '100%' }}>
-                <label htmlFor="password" style={{ 
-                  display: 'block', 
-                  fontSize: '0.875rem', 
-                  fontWeight: '500', 
-                  color: '#000000', 
-                  marginBottom: '0.5rem' 
-                }}>
-                  Password
-                </label>
+                <label className="label" htmlFor="password">Password</label>
+                <div className="input">
                 <input
+                    id="password"
                   type="password"
-                  id="password"
-                  placeholder="Value"
+                    autoComplete="new-password"
+                    placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  style={{
-                    color: 'black',
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d0d0d0',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                    boxSizing: 'border-box'
-                  }}
                 />
               </div>
 
-              {/* Register Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  borderRadius: '0.375rem',
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  backgroundColor: loading ? '#9ca3af' : '#343a40',
-                  color: 'white',
-                  marginBottom: '1rem',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {loading ? 'Registering...' : 'Register'}
+                {message && <div className="error">{message}</div>}
+
+                <button type="submit" className="btn btn--primary" disabled={loading}>
+                  {loading ? 'Creating account…' : 'Create Account'}
               </button>
 
-              {/* Error Message */}
-              {message && (
-                <div style={{ 
-                  color: '#dc2626', 
-                  fontSize: '0.875rem', 
-                  textAlign: 'center', 
-                  marginBottom: '1rem',
-                  width: '100%'
-                }}>
-                  {message}
-                </div>
-              )}
+                <p className="helper">
+                  Already have an account?{' '}
+                  <a className="link" href="/">
+                    Sign in
+                  </a>
+                </p>
             </form>
-
-            {/* Login Link */}
-            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-              <p style={{ 
-                color: '#000000', 
-                fontSize: '0.875rem', 
-                margin: '0 0 0.5rem 0' 
-              }}>
-                Already have an account?
-              </p>
-              <a 
-                href="/" 
-                style={{ 
-                  color: '#2563eb', 
-                  fontSize: '0.875rem',
-                  textDecoration: 'none'
-                }}
-              >
-                Log in
-              </a>
             </div>
-          </div>
-        </div>
-      </div>
+          </main>
+        </>
+      )}
     </div>
   );
 };

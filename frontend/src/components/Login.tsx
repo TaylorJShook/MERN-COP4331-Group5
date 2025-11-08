@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
 import { storeToken } from '../tokenStorage';
@@ -9,7 +9,16 @@ function Login() {
   const [loginName, setLoginName] = useState('');
   const [loginPassword, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+
+  // Close modal on ESC key
+  useEffect(() => {
+    if (!showModal) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowModal(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showModal]);
 
   async function doLogin(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -64,240 +73,120 @@ function Login() {
   }
 
   return (
-    <div style={{ margin: 0, padding: 0 }}>
-      {/* Header Banner - Light Green - Full Width */}
-      <div
-        style={{
-          backgroundColor: '#AECEB3',
-          padding: '1.5rem 1rem',
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',            
-          boxSizing: 'border-box',
-          minHeight: '4rem',
-          marginTop: 0,
-          marginBottom: 0,
-          position: 'sticky',       // optional: keep attached to top
-          top: 0,
-          zIndex: 1000,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            width: '100%',
-            padding: '0 1rem',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              color: '#000000',
-              margin: 0,
-            }}
+    <div className="login-page">
+      {/* Animated background blobs */}
+      <div className="blob blob--indigo" aria-hidden="true" />
+      <div className="blob blob--mint" aria-hidden="true" />
+      <div className="blob blob--pink" aria-hidden="true" />
+
+      {/* Top bar */}
+      <header className="topbar">
+        <div className="topbar__inner">
+          <span className="brand">Daily Task Planner</span>
+          <button 
+            className="btn-topbar" 
+            onClick={() => setShowModal(true)}
           >
-            Daily Task Planner
-          </h1>
+            Sign in
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content Container */}
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: 'white', 
-        display: 'flex', 
-        flexDirection: 'column' 
-      }}>
+      {/* Hero */}
+      <section className="hero">
+        <h1 className="hero__title">Daily Task Planner</h1>
+        <p className="hero__sub">Organize your day, achieve your goals</p>
+        <ul className="hero-list">
+          <li>
+            <span className="checkmark">✓</span>
+            Plan your tasks
+          </li>
+          <li>
+            <span className="checkmark">✓</span>
+            Set reminders
+          </li>
+        </ul>
+      </section>
 
-      {/* Main Content */}
-      <div style={{ 
-        flex: 1, 
-        display: 'flex', 
-        flexDirection: 'column',
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        padding: '3rem 1rem',
-        gap: '2rem'
-      }}>
-        {/* Main Title */}
-        <h1 style={{ 
-          fontSize: '3rem', 
-          fontWeight: 'bold', 
-          color: '#000000', 
-          margin: 0,
-          textAlign: 'center'
-        }}>
-          Daily Task Planner
-        </h1>
+      {/* Feature Cards */}
+      <section className="features">
+        <div className="feature-card">
+          <div className="feature-icon">📋</div>
+          <h3 className="feature-title">Easy Organization</h3>
+          <p className="feature-desc">Simple task management to keep everything in one place</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">⏰</div>
+          <h3 className="feature-title">Smart Reminders</h3>
+          <p className="feature-desc">Never miss a deadline with timely notifications</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">📊</div>
+          <h3 className="feature-title">Track Progress</h3>
+          <p className="feature-desc">Visualize your achievements and stay motivated</p>
+        </div>
+      </section>
 
-        {/* Subtitle */}
-        <p style={{ 
-          color: '#000000', 
-          margin: 0,
-          fontSize: '1.125rem',
-          textAlign: 'center'
-        }}>
-          Use our app to track your tasks!
-        </p>
+      {/* Backdrop scrim behind modal */}
+      {showModal && (
+        <div
+          className="backdrop"
+          aria-hidden="true"
+          onClick={() => setShowModal(false)}
+        />
+      )}
 
-        {/* Login Form */}
-        <div style={{ 
-          backgroundColor: '#BCC7BD', 
-          borderRadius: '0.5rem', 
-          padding: '2rem', 
-          width: '100%', 
-          maxWidth: '28rem',
-          border: '1px solid #e0e0e0'
-        }}>
-          <h2 style={{ 
-            fontSize: '1.5rem', 
-            fontWeight: '600', 
-            marginBottom: '1.5rem', 
-            color: '#000000',
-            margin: '0 0 1.5rem 0'
-          }}>
-            Log In
-          </h2>
-          
-          <form onSubmit={doLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
-            {/* Username Field */}
-            <div style={{ textAlign: 'left', width: '100%' }}>
-              <label htmlFor="loginName" style={{ 
-                display: 'block', 
-                fontSize: '0.875rem', 
-                fontWeight: '500', 
-                color: '#000000', 
-                marginBottom: '0.5rem' 
-              }}>
-                Username
-              </label>
-              <input
-                type="text"
-                id="loginName"
-                placeholder="Value"
-                value={loginName}
-                onChange={(e) => setLoginName(e.target.value)}
-                required
-                style={{
-                  color: 'black',
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d0d0d0',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  backgroundColor: 'white',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
+      {/* Glass Card (floating) - Modal */}
+      <div className={`login-modal glass ${showModal ? 'show' : ''}`} role="dialog" aria-modal="true" aria-label="Login form">
+        <button 
+          className="modal-close" 
+          onClick={() => setShowModal(false)}
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <h2 className="glass__title">Welcome back 👋</h2>
 
-            {/* Password Field */}
-            <div style={{ textAlign: 'left', width: '100%' }}>
-              <label htmlFor="loginPassword" style={{ 
-                display: 'block', 
-                fontSize: '0.875rem', 
-                fontWeight: '500', 
-                color: '#000000', 
-                marginBottom: '0.5rem' 
-              }}>
-                Password
-              </label>
-              <input
-                type="password"
-                id="loginPassword"
-                placeholder="Value"
-                value={loginPassword}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{
-                  color: 'black',
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d0d0d0',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  backgroundColor: 'white',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-
-            {/* Forgot Password Link */}
-            <div style={{ textAlign: 'left', marginBottom: '0.5rem', width: '100%' }}>
-              <a 
-                href="/forgot-password" 
-                style={{ 
-                  color: '#666666', 
-                  fontSize: '0.875rem',
-                  textDecoration: 'none'
-                }}
-              >
-                Forgot password?
-              </a>
-            </div>
-
-            {/* Sign In Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.875rem',
-                borderRadius: '0.375rem',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                backgroundColor: loading ? '#9ca3af' : '#343a40',
-                color: 'white',
-                marginBottom: '1rem',
-                boxSizing: 'border-box'
-              }}
-            >
-              {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-
-            {/* Error Message */}
-            {message && (
-              <div style={{ 
-                color: '#dc2626', 
-                fontSize: '0.875rem', 
-                textAlign: 'center', 
-                marginBottom: '1rem',
-                width: '100%'
-              }}>
-                {message}
-              </div>
-            )}
-          </form>
-
-          {/* Register Button */}
-          <div style={{ width: '100%' }}>
-            <a 
-              href="/register" 
-              style={{ 
-                display: 'block',
-                width: '100%',
-                padding: '0.875rem',
-                backgroundColor: '#343a40',
-                color: 'white',
-                borderRadius: '0.375rem',
-                fontWeight: '500',
-                fontSize: '0.875rem',
-                textDecoration: 'none',
-                textAlign: 'center',
-                boxSizing: 'border-box'
-              }}
-            >
-              Register
-            </a>
+        <form className="form" onSubmit={doLogin} noValidate>
+          <label className="label" htmlFor="loginName">Username</label>
+          <div className="input">
+            <input
+              id="loginName"
+              type="text"
+              autoComplete="username"
+              placeholder="Enter your username"
+              value={loginName}
+              onChange={(e) => setLoginName(e.target.value)}
+              required
+            />
           </div>
-        </div>
-      </div>
+
+          <div className="label-row">
+            <label className="label" htmlFor="loginPassword">Password</label>
+            <a className="muted small" href="/forgot-password">Forgot?</a>
+          </div>
+          <div className="input">
+            <input
+              id="loginPassword"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={loginPassword}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          {message && <div className="error">{message}</div>}
+
+          <button type="submit" className="btn btn--primary" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign in'}
+          </button>
+
+          <p className="helper">
+            Don't have an account? <a className="link" href="/register">Register</a>
+          </p>
+        </form>
       </div>
     </div>
   );

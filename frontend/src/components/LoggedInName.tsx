@@ -11,13 +11,13 @@ function LoggedInName() {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <span className="text-lg font-medium">
-        Logged in as {ud.firstName} {ud.lastName}
+    <div className="logged-in-user">
+      <span className="logged-in-user__name">
+        {ud.firstName} {ud.lastName}
       </span>
       <button
         type="button"
-        className="bg-white text-[#A8C3A0] px-3 py-1 rounded-md shadow hover:bg-gray-100"
+        className="btn-topbar"
         onClick={doLogout}
       >
         Log Out
