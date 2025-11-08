@@ -2,10 +2,6 @@
 node_modules/
 
 # Ignore environment files
-touch.env
-*.env
-.env.local
-.env.*.local
 
 # Ignore local logs
 *.log
