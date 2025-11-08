@@ -57,14 +57,6 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({
     });
   };
 
-  const formatDateShort = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
   const isToday = (date: Date): boolean => {
     const today = new Date();
     return (
