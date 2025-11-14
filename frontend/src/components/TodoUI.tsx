@@ -490,6 +490,35 @@ function TodoUI() {
     const task = allTodos.find((t: any) => t._id === id);
     const isCompleting = !task?.completed;
 
+    // Optimistically update UI immediately
+    setAllTodos((prevTodos: any[]) =>
+      prevTodos.map((todo: any) =>
+        todo._id === id
+          ? {
+              ...todo,
+              completed: !todo.completed,
+              Completed: !todo.completed,
+              CompletedAt: !todo.completed ? new Date() : null,
+            }
+          : todo
+      )
+    );
+
+    // Update completion timestamps
+    if (isCompleting) {
+      setCompletionTimestamps((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(id, new Date());
+        return newMap;
+      });
+    } else {
+      setCompletionTimestamps((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(id);
+        return newMap;
+      });
+    }
+
     const obj = { id, jwtToken: retrieveToken() };
     try {
       const response = await fetch(buildPath("api/check"), {
@@ -500,28 +529,16 @@ function TodoUI() {
       const res = await response.json();
       if (res.error && res.error.length > 0) {
         setMessage("Error: " + res.error);
-      } else {
-        // Store completion timestamp if task is being completed
-        if (isCompleting) {
-          setCompletionTimestamps((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(id, new Date());
-            return newMap;
-          });
-        } else {
-          // Remove completion timestamp if task is being unchecked
-          setCompletionTimestamps((prev) => {
-            const newMap = new Map(prev);
-            newMap.delete(id);
-            return newMap;
-          });
-        }
-
-        storeToken(res.jwtToken);
+        // Revert optimistic update on error
         await getTodos();
+      } else {
+        storeToken(res.jwtToken);
+        // No need to refetch - already updated optimistically
       }
     } catch (error: any) {
       setMessage(error.toString());
+      // Revert optimistic update on error
+      await getTodos();
     }
   }
 
