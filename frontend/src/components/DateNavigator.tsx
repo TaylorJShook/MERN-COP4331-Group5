@@ -66,7 +66,16 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({
     );
   };
 
+  const isBeforeToday = (date: Date): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate < today;
+  };
+
   const today = isToday(selectedDate);
+  const beforeToday = isBeforeToday(selectedDate);
 
   return (
     <div
@@ -95,7 +104,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({
         {!today && (
           <button
             type="button"
-            className="date-nav-today"
+            className={`date-nav-today ${beforeToday ? 'date-nav-today--forward' : 'date-nav-today--backward'}`}
             onClick={onToday}
             aria-label="Go to today"
             title="Go to today (Home key)"

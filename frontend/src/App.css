@@ -1094,19 +1094,49 @@
 }
 .date-nav-today {
   padding: var(--space-8) var(--space-16);
-  border: none;
+  border: 1px solid rgba(108, 99, 255, 0.3);
   border-radius: var(--r-sm);
-  background: rgba(108, 99, 255, 0.1);
+  background: rgba(108, 99, 255, 0.08);
   color: var(--indigo);
   font-size: var(--font-xs);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+}
+.date-nav-today::before {
+  position: absolute;
+  font-size: var(--font-sm);
+  font-weight: bold;
+}
+/* Right arrow for dates before today (forward in time) - on right side */
+.date-nav-today--forward {
+  padding-right: var(--space-24);
+  padding-left: var(--space-16);
+}
+.date-nav-today--forward::before {
+  content: "→";
+  right: var(--space-8);
+  left: auto;
+}
+/* Left arrow for dates after today (backward in time) - on left side */
+.date-nav-today--backward {
+  padding-left: var(--space-24);
+  padding-right: var(--space-16);
+}
+.date-nav-today--backward::before {
+  content: "←";
+  left: var(--space-8);
+  right: auto;
 }
 .date-nav-today:hover {
   background: var(--indigo);
   color: white;
+  border-color: var(--indigo);
   transform: translateY(-1px);
+}
+.date-nav-today:hover::before {
+  color: white;
 }
 
 /* ---- Logged In User (in topbar) ---- */
