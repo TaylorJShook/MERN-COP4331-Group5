@@ -12,6 +12,10 @@ __pycache__/
 # Keep frontend build folder (for deployment)
 !frontend/dist/
 
+# Ignore test coverage reports
+coverage/
+*.lcov
+
 # System files
 .DS_Store
 Thumbs.db
