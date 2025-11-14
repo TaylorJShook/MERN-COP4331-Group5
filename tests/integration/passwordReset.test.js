@@ -14,17 +14,19 @@ process.env.SENDGRID_API_KEY = '';
 let app;
 let client;
 let db;
+let mongoServer;
 
 describe('Password Reset API Endpoints', () => {
   beforeAll(async () => {
     const testDB = await setupTestDB();
+    mongoServer = testDB.mongoServer;
     client = testDB.client;
     db = testDB.db;
     app = createTestApp(client);
   });
 
   afterAll(async () => {
-    await teardownTestDB();
+    await teardownTestDB(mongoServer, client);
   });
 
   beforeEach(async () => {
@@ -228,6 +230,107 @@ describe('Password Reset API Endpoints', () => {
         .send({
           email: 'test@example.com'
           // Missing token and newPassword
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should handle user with no email address', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        Email: null
+      });
+
+      const response = await request(app)
+        .post('/api/request-password-reset')
+        .send({
+          login: 'testuser'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.sent).toBe(false);
+      expect(response.body.error).toContain('no email');
+    });
+  });
+
+  describe('POST /api/reset-password-with-code', () => {
+    it('should reset password with valid code', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        Email: 'test@example.com',
+        Password: 'oldpassword',
+        ResetCode: '123456',
+        ResetToken: 'some-token',
+        ResetExpires: new Date(Date.now() + 15 * 60 * 1000)
+      });
+
+      const response = await request(app)
+        .post('/api/reset-password-with-code')
+        .send({
+          email: 'test@example.com',
+          code: '123456',
+          newPassword: 'newpassword123'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.error).toBe('');
+
+      // Verify password was changed
+      const user = await db.collection('Users').findOne({ Email: 'test@example.com' });
+      expect(user.Password).toBe('newpassword123');
+      expect(user.ResetCode).toBeUndefined();
+      expect(user.ResetToken).toBeUndefined();
+    });
+
+    it('should work with login instead of email', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        Email: 'test@example.com',
+        Password: 'oldpassword',
+        ResetCode: '123456',
+        ResetExpires: new Date(Date.now() + 15 * 60 * 1000)
+      });
+
+      const response = await request(app)
+        .post('/api/reset-password-with-code')
+        .send({
+          login: 'testuser',
+          code: '123456',
+          newPassword: 'newpassword123'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.error).toBe('');
+    });
+
+    it('should reject invalid code', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        Email: 'test@example.com',
+        Password: 'oldpassword',
+        ResetCode: '123456',
+        ResetExpires: new Date(Date.now() + 15 * 60 * 1000)
+      });
+
+      const response = await request(app)
+        .post('/api/reset-password-with-code')
+        .send({
+          email: 'test@example.com',
+          code: '999999',
+          newPassword: 'newpassword123'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.error).toContain('invalid');
+    });
+
+    it('should require all parameters', async () => {
+      const response = await request(app)
+        .post('/api/reset-password-with-code')
+        .send({
+          email: 'test@example.com'
+          // Missing code and newPassword
         });
 
       expect(response.status).toBe(400);

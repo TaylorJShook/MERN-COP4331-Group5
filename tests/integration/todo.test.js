@@ -18,17 +18,19 @@ let client;
 let db;
 let testUser;
 let authToken;
+let mongoServer;
 
 describe('Todo API Endpoints', () => {
   beforeAll(async () => {
     const testDB = await setupTestDB();
+    mongoServer = testDB.mongoServer;
     client = testDB.client;
     db = testDB.db;
     app = createTestApp(client);
   });
 
   afterAll(async () => {
-    await teardownTestDB();
+    await teardownTestDB(mongoServer, client);
   });
 
   beforeEach(async () => {
@@ -356,6 +358,93 @@ describe('Todo API Endpoints', () => {
       expect(response.status).toBe(403);
       expect(response.body.error).toContain('authorized');
     });
+
+    it('should clear startDate when set to null', async () => {
+      const response = await request(app)
+        .post('/api/edittodo')
+        .send({
+          jwtToken: authToken,
+          id: todoId,
+          startDate: null
+        });
+
+      expect(response.status).toBe(200);
+      
+      const { ObjectId } = require('mongodb');
+      const updated = await db.collection('Todos').findOne({ _id: new ObjectId(todoId) });
+      expect(updated.StartDate).toBeUndefined();
+    });
+
+    it('should clear dueDate when set to null', async () => {
+      const response = await request(app)
+        .post('/api/edittodo')
+        .send({
+          jwtToken: authToken,
+          id: todoId,
+          dueDate: null
+        });
+
+      expect(response.status).toBe(200);
+      
+      const { ObjectId } = require('mongodb');
+      const updated = await db.collection('Todos').findOne({ _id: new ObjectId(todoId) });
+      expect(updated.DueDate).toBeUndefined();
+    });
+
+    it('should reject invalid startDate format', async () => {
+      const response = await request(app)
+        .post('/api/edittodo')
+        .send({
+          jwtToken: authToken,
+          id: todoId,
+          startDate: 'invalid-date'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('startDate is invalid');
+    });
+
+    it('should reject invalid dueDate format', async () => {
+      const response = await request(app)
+        .post('/api/edittodo')
+        .send({
+          jwtToken: authToken,
+          id: todoId,
+          dueDate: 'not-a-date'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('dueDate is invalid');
+    });
+
+    it('should reject edit with no fields to update', async () => {
+      const response = await request(app)
+        .post('/api/edittodo')
+        .send({
+          jwtToken: authToken,
+          id: todoId
+          // No fields to update
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('no fields to update');
+    });
+
+    it('should normalize priority values', async () => {
+      const response = await request(app)
+        .post('/api/edittodo')
+        .send({
+          jwtToken: authToken,
+          id: todoId,
+          priority: 'HIGH' // Uppercase
+        });
+
+      expect(response.status).toBe(200);
+      
+      const { ObjectId } = require('mongodb');
+      const updated = await db.collection('Todos').findOne({ _id: new ObjectId(todoId) });
+      expect(updated.Priority).toBe('High'); // Should be normalized
+    });
   });
 
   describe('POST /api/deletetodo', () => {
@@ -504,6 +593,392 @@ describe('Todo API Endpoints', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.error).toContain('JWT');
+    });
+
+    it('should reject invalid ObjectId format', async () => {
+      const response = await request(app)
+        .post('/api/check')
+        .send({
+          jwtToken: authToken,
+          id: 'invalid-id-format'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('invalid id format');
+    });
+
+    it('should require id parameter', async () => {
+      const response = await request(app)
+        .post('/api/check')
+        .send({
+          jwtToken: authToken
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+  });
+
+  describe('POST /api/check-bulk', () => {
+    let todoIds;
+
+    beforeEach(async () => {
+      // Create multiple todos
+      const todo1 = await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Task 1',
+        Completed: false,
+        CreatedAt: new Date()
+      });
+      
+      const todo2 = await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Task 2',
+        Completed: false,
+        CreatedAt: new Date()
+      });
+
+      todoIds = [todo1.insertedId.toString(), todo2.insertedId.toString()];
+    });
+
+    it('should mark multiple todos as completed', async () => {
+      const response = await request(app)
+        .post('/api/check-bulk')
+        .send({
+          jwtToken: authToken,
+          ids: todoIds,
+          completed: true
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.modifiedCount).toBe(2);
+      expect(response.body.error).toBe('');
+    });
+
+    it('should mark multiple todos as incomplete', async () => {
+      // First mark them as completed
+      await db.collection('Todos').updateMany(
+        { UserID: testUser.UserID },
+        { $set: { Completed: true } }
+      );
+
+      const response = await request(app)
+        .post('/api/check-bulk')
+        .send({
+          jwtToken: authToken,
+          ids: todoIds,
+          completed: false
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.modifiedCount).toBe(2);
+    });
+
+    it('should require ids array and completed boolean', async () => {
+      const response = await request(app)
+        .post('/api/check-bulk')
+        .send({
+          jwtToken: authToken,
+          ids: todoIds
+          // Missing completed
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should reject invalid ObjectIds', async () => {
+      const response = await request(app)
+        .post('/api/check-bulk')
+        .send({
+          jwtToken: authToken,
+          ids: ['invalid-id-1', 'invalid-id-2'],
+          completed: true
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('no valid ids');
+    });
+
+    it('should filter out invalid ids from mixed array', async () => {
+      const response = await request(app)
+        .post('/api/check-bulk')
+        .send({
+          jwtToken: authToken,
+          ids: [todoIds[0], 'invalid-id'],
+          completed: true
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.modifiedCount).toBe(1);
+    });
+  });
+
+  describe('POST /api/next-day', () => {
+    let todoId;
+
+    beforeEach(async () => {
+      const result = await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Task with due date',
+        DueDate: new Date('2024-01-15'),
+        Completed: false,
+        CreatedAt: new Date()
+      });
+      todoId = result.insertedId.toString();
+    });
+
+    it('should move due date forward by one day', async () => {
+      const response = await request(app)
+        .post('/api/next-day')
+        .send({
+          jwtToken: authToken,
+          id: todoId
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.modifiedCount).toBe(1);
+      expect(response.body.newDueDate).toBeDefined();
+    });
+
+    it('should create due date if none exists', async () => {
+      // Create todo without due date
+      const result = await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Task without due date',
+        Completed: false,
+        CreatedAt: new Date()
+      });
+
+      const response = await request(app)
+        .post('/api/next-day')
+        .send({
+          jwtToken: authToken,
+          id: result.insertedId.toString()
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.modifiedCount).toBe(1);
+      expect(response.body.newDueDate).toBeDefined();
+    });
+
+    it('should require id parameter', async () => {
+      const response = await request(app)
+        .post('/api/next-day')
+        .send({
+          jwtToken: authToken
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should reject invalid ObjectId format', async () => {
+      const response = await request(app)
+        .post('/api/next-day')
+        .send({
+          jwtToken: authToken,
+          id: 'invalid-id'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('invalid id format');
+    });
+  });
+
+  describe('POST /api/current', () => {
+    beforeEach(async () => {
+      const now = new Date();
+      
+      // Create overdue todo
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Overdue task',
+        DueDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        Completed: false,
+        CreatedAt: new Date()
+      });
+
+      // Create today's todo
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Today task',
+        DueDate: now,
+        Completed: false,
+        CreatedAt: new Date()
+      });
+
+      // Create upcoming todo
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Upcoming task',
+        DueDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        Completed: false,
+        CreatedAt: new Date()
+      });
+
+      // Create todo with no due date
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'No due date task',
+        Completed: false,
+        CreatedAt: new Date()
+      });
+    });
+
+    it('should return categorized incomplete todos', async () => {
+      const response = await request(app)
+        .post('/api/current')
+        .send({
+          jwtToken: authToken,
+          userId: testUser.UserID
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.counts).toBeDefined();
+      expect(response.body.overdue.length).toBeGreaterThan(0);
+      expect(response.body.today.length).toBeGreaterThan(0);
+      expect(response.body.upcoming.length).toBeGreaterThan(0);
+      expect(response.body.noDue.length).toBeGreaterThan(0);
+    });
+
+    it('should require userId parameter', async () => {
+      const response = await request(app)
+        .post('/api/current')
+        .send({
+          jwtToken: authToken
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should reject mismatched userId', async () => {
+      const response = await request(app)
+        .post('/api/current')
+        .send({
+          jwtToken: authToken,
+          userId: 999
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('Not authorized');
+    });
+  });
+
+  describe('POST /api/previous', () => {
+    beforeEach(async () => {
+      const now = new Date();
+      
+      // Create completed todo from today
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Completed today',
+        Completed: true,
+        CompletedAt: now,
+        CreatedAt: new Date()
+      });
+
+      // Create completed todo from yesterday (set to middle of yesterday)
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(12, 0, 0, 0); // Noon yesterday
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Completed yesterday',
+        Completed: true,
+        CompletedAt: yesterday,
+        CreatedAt: new Date()
+      });
+
+      // Create completed todo from 3 days ago (set to middle of that day)
+      const threeDaysAgo = new Date(now);
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      threeDaysAgo.setHours(12, 0, 0, 0); // Noon 3 days ago
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Completed 3 days ago',
+        Completed: true,
+        CompletedAt: threeDaysAgo,
+        CreatedAt: new Date()
+      });
+
+      // Create completed todo with no timestamp
+      await db.collection('Todos').insertOne({
+        UserID: testUser.UserID,
+        Title: 'Completed no timestamp',
+        Completed: true,
+        CreatedAt: new Date()
+      });
+    });
+
+    it('should return categorized completed todos', async () => {
+      const response = await request(app)
+        .post('/api/previous')
+        .send({
+          jwtToken: authToken,
+          userId: testUser.UserID
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.counts).toBeDefined();
+      
+      // Verify counts
+      const totalCategorized = response.body.today.length + 
+                               response.body.yesterday.length + 
+                               response.body.last7.length + 
+                               response.body.last30.length + 
+                               response.body.older.length +
+                               response.body.noTimestamp.length;
+      
+      expect(totalCategorized).toBe(4); // We created 4 todos
+      expect(response.body.today.length).toBeGreaterThan(0);
+      expect(response.body.yesterday.length).toBeGreaterThan(0);
+      
+      // The 3-days-ago todo should be in last7 OR last30, but let's just check it exists somewhere
+      expect(totalCategorized).toBe(4);
+    });
+
+    it('should require userId parameter', async () => {
+      const response = await request(app)
+        .post('/api/previous')
+        .send({
+          jwtToken: authToken
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should reject mismatched userId', async () => {
+      const response = await request(app)
+        .post('/api/previous')
+        .send({
+          jwtToken: authToken,
+          userId: 999
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('Not authorized');
+    });
+
+    it('should respect limit parameter', async () => {
+      const response = await request(app)
+        .post('/api/previous')
+        .send({
+          jwtToken: authToken,
+          userId: testUser.UserID,
+          limit: 2
+        });
+
+      expect(response.status).toBe(200);
+      const totalTodos = response.body.today.length + 
+                         response.body.yesterday.length + 
+                         response.body.last7.length + 
+                         response.body.last30.length + 
+                         response.body.older.length +
+                         response.body.noTimestamp.length;
+      expect(totalTodos).toBeLessThanOrEqual(2);
     });
   });
 });

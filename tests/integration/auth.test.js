@@ -14,17 +14,19 @@ process.env.SENDGRID_API_KEY = '';
 let app;
 let client;
 let db;
+let mongoServer;
 
 describe('Authentication API Endpoints', () => {
   beforeAll(async () => {
     const testDB = await setupTestDB();
+    mongoServer = testDB.mongoServer;
     client = testDB.client;
     db = testDB.db;
     app = createTestApp(client);
   });
 
   afterAll(async () => {
-    await teardownTestDB();
+    await teardownTestDB(mongoServer, client);
   });
 
   beforeEach(async () => {
@@ -285,6 +287,99 @@ describe('Authentication API Endpoints', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('required');
+    });
+
+    it('should return success if email already verified', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        EmailVerified: true
+      });
+
+      const response = await request(app)
+        .post('/api/verify-email')
+        .send({
+          login: 'testuser',
+          code: '123456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.verified).toBe(true);
+    });
+
+    it('should reject if no verification code was requested', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        EmailVerified: false
+        // No VerificationCode or VerificationExpires
+      });
+
+      const response = await request(app)
+        .post('/api/verify-email')
+        .send({
+          login: 'testuser',
+          code: '123456'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.verified).toBe(false);
+      expect(response.body.error).toContain('no code requested');
+    });
+  });
+
+  describe('POST /api/request-email-verification', () => {
+    it('should send new verification code for existing user', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        Email: 'test@example.com',
+        EmailVerified: false
+      });
+
+      const response = await request(app)
+        .post('/api/request-email-verification')
+        .send({
+          login: 'testuser'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.sent).toBe(true);
+    });
+
+    it('should require login or email', async () => {
+      const response = await request(app)
+        .post('/api/request-email-verification')
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should handle user not found', async () => {
+      const response = await request(app)
+        .post('/api/request-email-verification')
+        .send({
+          login: 'nonexistent'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.sent).toBe(false);
+      expect(response.body.error).toContain('not found');
+    });
+
+    it('should handle user with no email', async () => {
+      await insertTestUser(db, {
+        Login: 'testuser',
+        Email: null
+      });
+
+      const response = await request(app)
+        .post('/api/request-email-verification')
+        .send({
+          login: 'testuser'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.sent).toBe(false);
+      expect(response.body.error).toContain('no email');
     });
   });
 });

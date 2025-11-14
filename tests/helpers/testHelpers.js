@@ -11,21 +11,21 @@ let db;
  * Setup in-memory MongoDB for testing
  */
 async function setupTestDB() {
-  mongoServer = await MongoMemoryServer.create();
-  const uri = mongoServer.getUri();
+  const localMongoServer = await MongoMemoryServer.create();
+  const uri = localMongoServer.getUri();
   
-  client = new MongoClient(uri);
-  await client.connect();
+  const localClient = new MongoClient(uri);
+  await localClient.connect();
   
-  db = client.db('TestTodoApp');
+  const localDb = localClient.db('TestTodoApp');
   
-  return { client, db };
+  return { mongoServer: localMongoServer, client: localClient, db: localDb };
 }
 
 /**
  * Teardown test database
  */
-async function teardownTestDB() {
+async function teardownTestDB(mongoServer, client) {
   if (client) {
     await client.close();
   }
