@@ -175,14 +175,9 @@ function Login() {
             />
           </div>
 
-          <div className="label-row">
-            <label className="label" htmlFor="loginPassword">
-              Password
-            </label>
-            <a className="muted small" href="/forgot-password">
-              Forgot?
-            </a>
-          </div>
+          <label className="label" htmlFor="loginPassword">
+            Password
+          </label>
           <div className="input">
             <input
               id="loginPassword"
@@ -193,6 +188,11 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+          <div style={{ textAlign: 'left', marginTop: '-12px', marginBottom: '16px' }}>
+            <a className="muted small" href="/forgot-password">
+              Forgot password?
+            </a>
           </div>
 
           {message && <div className="error">{message}</div>}
