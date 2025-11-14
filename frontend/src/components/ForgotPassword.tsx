@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
+import { APP_NAME } from '../config';
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -112,7 +113,7 @@ const ForgotPassword: React.FC = () => {
       {/* Top bar */}
       <header className="topbar">
         <div className="topbar__inner">
-          <span className="brand">Daily Task Planner</span>
+          <span className="brand">{APP_NAME}</span>
           <a className="topbar__link" href="/">
             Sign in
           </a>
@@ -121,7 +122,7 @@ const ForgotPassword: React.FC = () => {
 
       {/* Hero */}
       <section className="hero">
-        <h1 className="hero__title">Daily Task Planner</h1>
+        <h1 className="hero__title">{APP_NAME}</h1>
         <p className="hero__sub">Organize your day, achieve your goals</p>
       </section>
 

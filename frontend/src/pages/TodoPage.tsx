@@ -1,5 +1,6 @@
 import LoggedInName from '../components/LoggedInName';
 import TodoUI from '../components/TodoUI';
+import { APP_NAME } from '../config';
 
 const TodoPage = () =>
 {
@@ -13,7 +14,7 @@ const TodoPage = () =>
             {/* Top bar */}
             <header className="topbar">
                 <div className="topbar__inner">
-                    <span className="brand">Daily Task Planner</span>
+                    <span className="brand">{APP_NAME}</span>
                     <LoggedInName />
                 </div>
             </header>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { buildPath } from './Path';
 import { storeToken } from '../tokenStorage';
 import { jwtDecode } from 'jwt-decode';
+import { APP_NAME } from '../config';
 
 function Login() {
   const [message, setMessage] = useState('');
@@ -82,7 +83,7 @@ function Login() {
       {/* Top bar */}
       <header className="topbar">
         <div className="topbar__inner">
-          <span className="brand">Daily Task Planner</span>
+          <span className="brand">{APP_NAME}</span>
           <button 
             className="btn-topbar" 
             onClick={() => setShowModal(true)}
@@ -94,7 +95,7 @@ function Login() {
 
       {/* Hero */}
       <section className="hero">
-        <h1 className="hero__title">Daily Task Planner</h1>
+        <h1 className="hero__title">{APP_NAME}</h1>
         <p className="hero__sub">Organize your day, achieve your goals</p>
         <ul className="hero-list">
           <li>
