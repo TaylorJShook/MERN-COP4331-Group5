@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 
 interface DateNavigatorProps {
   selectedDate: Date;
@@ -24,36 +24,36 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({
       }
 
       switch (e.key) {
-        case 'ArrowLeft':
+        case "ArrowLeft":
           e.preventDefault();
           onPreviousDay();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           e.preventDefault();
           onNextDay();
           break;
-        case 'Home':
+        case "Home":
           e.preventDefault();
           onToday();
           break;
-        case 'End':
+        case "End":
           e.preventDefault();
           onToday();
           break;
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [onPreviousDay, onNextDay, onToday]);
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -69,10 +69,10 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({
   const today = isToday(selectedDate);
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="date-navigator" 
-      role="navigation" 
+      className="date-navigator"
+      role="navigation"
       aria-label="Date navigation"
     >
       <button
@@ -84,9 +84,12 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({
       >
         ←
       </button>
-      
+
       <div className="date-display" role="status" aria-live="polite">
-        <div className="date-display__main" aria-label={`Selected date: ${formatDate(selectedDate)}`}>
+        <div
+          className="date-display__main"
+          aria-label={`Selected date: ${formatDate(selectedDate)}`}
+        >
           {formatDate(selectedDate)}
         </div>
         {!today && (
@@ -112,11 +115,11 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({
         →
       </button>
       <span className="sr-only">
-        Keyboard shortcuts: Left Arrow for previous day, Right Arrow for next day, Home for today
+        Keyboard shortcuts: Left Arrow for previous day, Right Arrow for next
+        day, Home for today
       </span>
     </div>
   );
 };
 
 export default DateNavigator;
-

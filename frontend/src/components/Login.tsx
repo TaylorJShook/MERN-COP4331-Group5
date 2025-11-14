@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { buildPath } from './Path';
-import { storeToken } from '../tokenStorage';
-import { jwtDecode } from 'jwt-decode';
-import { APP_NAME } from '../config';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { buildPath } from "./Path";
+import { storeToken } from "../tokenStorage";
+import { jwtDecode } from "jwt-decode";
+import { APP_NAME } from "../config";
 
 function Login() {
-  const [message, setMessage] = useState('');
-  const [loginName, setLoginName] = useState('');
-  const [loginPassword, setPassword] = useState('');
+  const [message, setMessage] = useState("");
+  const [loginName, setLoginName] = useState("");
+  const [loginPassword, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -16,24 +16,27 @@ function Login() {
   // Close modal on ESC key
   useEffect(() => {
     if (!showModal) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setShowModal(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKey = (e: KeyboardEvent) =>
+      e.key === "Escape" && setShowModal(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [showModal]);
 
-  async function doLogin(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+  async function doLogin(
+    event: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
     event.preventDefault();
-    setMessage('');
+    setMessage("");
     setLoading(true);
 
     const obj = { login: loginName, password: loginPassword };
     const js = JSON.stringify(obj);
 
     try {
-      const response = await fetch(buildPath('api/login'), {
-        method: 'POST',
+      const response = await fetch(buildPath("api/login"), {
+        method: "POST",
         body: js,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
 
       const res = await response.json();
@@ -47,7 +50,7 @@ function Login() {
         res.accessToken || res.jwtToken || res.token || res.access_token;
 
       if (!accessToken) {
-        setMessage('Invalid server response: no access token found.');
+        setMessage("Invalid server response: no access token found.");
         return;
       }
 
@@ -59,14 +62,14 @@ function Login() {
       const lastName = decoded.lastName;
 
       if (!userId || userId <= 0) {
-        setMessage('User/Password combination incorrect');
+        setMessage("User/Password combination incorrect");
       } else {
         const user = { firstName, lastName, id: userId };
-        localStorage.setItem('user_data', JSON.stringify(user));
-        navigate('/todo');
+        localStorage.setItem("user_data", JSON.stringify(user));
+        navigate("/todo");
       }
     } catch (error: any) {
-      setMessage('A network or server error occurred.');
+      setMessage("A network or server error occurred.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -84,10 +87,7 @@ function Login() {
       <header className="topbar">
         <div className="topbar__inner">
           <span className="brand">{APP_NAME}</span>
-          <button 
-            className="btn-topbar" 
-            onClick={() => setShowModal(true)}
-          >
+          <button className="btn-topbar" onClick={() => setShowModal(true)}>
             Sign in
           </button>
         </div>
@@ -114,17 +114,23 @@ function Login() {
         <div className="feature-card">
           <div className="feature-icon">📋</div>
           <h3 className="feature-title">Easy Organization</h3>
-          <p className="feature-desc">Simple task management to keep everything in one place</p>
+          <p className="feature-desc">
+            Simple task management to keep everything in one place
+          </p>
         </div>
         <div className="feature-card">
           <div className="feature-icon">⏰</div>
           <h3 className="feature-title">Smart Reminders</h3>
-          <p className="feature-desc">Never miss a deadline with timely notifications</p>
+          <p className="feature-desc">
+            Never miss a deadline with timely notifications
+          </p>
         </div>
         <div className="feature-card">
           <div className="feature-icon">📊</div>
           <h3 className="feature-title">Track Progress</h3>
-          <p className="feature-desc">Visualize your achievements and stay motivated</p>
+          <p className="feature-desc">
+            Visualize your achievements and stay motivated
+          </p>
         </div>
       </section>
 
@@ -138,9 +144,14 @@ function Login() {
       )}
 
       {/* Glass Card (floating) - Modal */}
-      <div className={`login-modal glass ${showModal ? 'show' : ''}`} role="dialog" aria-modal="true" aria-label="Login form">
-        <button 
-          className="modal-close" 
+      <div
+        className={`login-modal glass ${showModal ? "show" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Login form"
+      >
+        <button
+          className="modal-close"
           onClick={() => setShowModal(false)}
           aria-label="Close"
         >
@@ -149,7 +160,9 @@ function Login() {
         <h2 className="glass__title">Welcome back 👋</h2>
 
         <form className="form" onSubmit={doLogin} noValidate>
-          <label className="label" htmlFor="loginName">Username</label>
+          <label className="label" htmlFor="loginName">
+            Username
+          </label>
           <div className="input">
             <input
               id="loginName"
@@ -163,8 +176,12 @@ function Login() {
           </div>
 
           <div className="label-row">
-            <label className="label" htmlFor="loginPassword">Password</label>
-            <a className="muted small" href="/forgot-password">Forgot?</a>
+            <label className="label" htmlFor="loginPassword">
+              Password
+            </label>
+            <a className="muted small" href="/forgot-password">
+              Forgot?
+            </a>
           </div>
           <div className="input">
             <input
@@ -181,11 +198,14 @@ function Login() {
           {message && <div className="error">{message}</div>}
 
           <button type="submit" className="btn btn--primary" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? "Signing in…" : "Sign in"}
           </button>
 
           <p className="helper">
-            Don't have an account? <a className="link" href="/register">Register</a>
+            Don't have an account?{" "}
+            <a className="link" href="/register">
+              Register
+            </a>
           </p>
         </form>
       </div>

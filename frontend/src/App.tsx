@@ -1,12 +1,17 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import "./App.css";
 
-import LoginPage from './pages/LoginPage';
-import TodoPage from './pages/TodoPage';
-import RegisterPage from './pages/RegisterPage';
-import VerifyEmail from './components/VerifyEmail';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
+import LoginPage from "./pages/LoginPage";
+import TodoPage from "./pages/TodoPage";
+import RegisterPage from "./pages/RegisterPage";
+import VerifyEmail from "./components/VerifyEmail";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 
 function App() {
   return (

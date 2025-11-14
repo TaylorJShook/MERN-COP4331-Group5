@@ -1,59 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { buildPath } from './Path';
-import { APP_NAME } from '../config';
+import React, { useState, useEffect } from "react";
+import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { buildPath } from "./Path";
+import { APP_NAME } from "../config";
 
 const VerifyEmail: React.FC = () => {
-  const [code, setCode] = useState('');
-  const [message, setMessage] = useState('');
+  const [code, setCode] = useState("");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(true);
   const navigate = useNavigate();
 
-  const pendingLogin = localStorage.getItem('pendingLogin') || '';
+  const pendingLogin = localStorage.getItem("pendingLogin") || "";
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowModal(false);
+      if (e.key === "Escape") setShowModal(false);
     };
     if (showModal) {
-      document.addEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEsc);
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
     return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = '';
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "";
     };
   }, [showModal]);
 
   const handleVerify = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage('');
+    setMessage("");
     setLoading(true);
 
     try {
-      const response = await fetch(buildPath('/api/verify-email'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(buildPath("/api/verify-email"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ login: pendingLogin, code }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data?.error || 'Verification failed.');
+        setMessage(data?.error || "Verification failed.");
       } else if (data?.error) {
         setMessage(data.error);
       } else {
-        localStorage.removeItem('pendingLogin');
-        navigate('/');
+        localStorage.removeItem("pendingLogin");
+        navigate("/");
       }
     } catch (err) {
       console.error(err);
-      setMessage('A network or server error occurred.');
+      setMessage("A network or server error occurred.");
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,12 @@ const VerifyEmail: React.FC = () => {
       {showModal && (
         <>
           <div className="backdrop" onClick={() => setShowModal(false)} />
-          <main className="login-modal show" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+          <main
+            className="login-modal show"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+          >
             <button
               className="modal-close"
               onClick={() => setShowModal(false)}
@@ -95,17 +100,24 @@ const VerifyEmail: React.FC = () => {
               ×
             </button>
             <div className="glass">
-              <h2 className="glass__title" id="modal-title">Verify Your Email</h2>
-              <p style={{ 
-                textAlign: 'center', 
-                marginBottom: '1.5rem',
-                color: 'var(--muted)',
-                fontSize: 'var(--font-sm)'
-              }}>
-                A verification code was sent to the email associated with <strong>{pendingLogin}</strong>.
+              <h2 className="glass__title" id="modal-title">
+                Verify Your Email
+              </h2>
+              <p
+                style={{
+                  textAlign: "center",
+                  marginBottom: "1.5rem",
+                  color: "var(--muted)",
+                  fontSize: "var(--font-sm)",
+                }}
+              >
+                A verification code was sent to the email associated with{" "}
+                <strong>{pendingLogin}</strong>.
               </p>
               <form className="form" onSubmit={handleVerify} noValidate>
-                <label className="label" htmlFor="code">Verification Code</label>
+                <label className="label" htmlFor="code">
+                  Verification Code
+                </label>
                 <div className="input">
                   <input
                     id="code"
@@ -121,12 +133,16 @@ const VerifyEmail: React.FC = () => {
 
                 {message && <div className="error">{message}</div>}
 
-                <button type="submit" className="btn btn--primary" disabled={loading}>
-                  {loading ? 'Verifying…' : 'Verify Email'}
+                <button
+                  type="submit"
+                  className="btn btn--primary"
+                  disabled={loading}
+                >
+                  {loading ? "Verifying…" : "Verify Email"}
                 </button>
 
                 <p className="helper">
-                  Didn't receive a code?{' '}
+                  Didn't receive a code?{" "}
                   <a className="link" href="/register">
                     Try registering again
                   </a>
