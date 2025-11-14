@@ -456,6 +456,8 @@
   border: none;
   background: rgba(0, 0, 0, 0.05);
   font-size: 24px;
+  font-weight: normal;
+  font-family: Arial, sans-serif;
   line-height: 1;
   cursor: pointer;
   color: var(--text);
@@ -1059,13 +1061,15 @@
   background: rgba(255, 255, 255, 0.8);
   color: var(--indigo);
   font-size: var(--font-xl);
-  font-weight: var(--font-weight-bold);
+  font-weight: normal;
+  font-family: Arial, sans-serif;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(108, 99, 255, 0.15);
+  line-height: 1;
 }
 .date-nav-btn:hover {
   background: var(--indigo);
@@ -1224,6 +1228,8 @@
   height: 56px;
   border-radius: 50%;
   font-size: var(--font-2xl);
+  font-weight: normal;
+  font-family: Arial, sans-serif;
   line-height: 1;
   padding: 0;
   display: flex;
@@ -1965,6 +1971,8 @@ textarea::placeholder {
   border: none;
   background: rgba(0, 0, 0, 0.05);
   font-size: 24px;
+  font-weight: normal;
+  font-family: Arial, sans-serif;
   line-height: 1;
   cursor: pointer;
   color: var(--text);
