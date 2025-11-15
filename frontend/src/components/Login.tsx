@@ -104,7 +104,7 @@ function Login() {
           </li>
           <li>
             <span className="checkmark">✓</span>
-            Set reminders
+            Track deadlines
           </li>
         </ul>
       </section>
