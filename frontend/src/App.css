@@ -2174,6 +2174,16 @@ body.dark .timeline-sidebar__close:hover {
   z-index: 2000;
   animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+body.dark .todo-message {
+  background: linear-gradient(
+    180deg,
+    rgba(31, 41, 55, 0.95),
+    rgba(17, 24, 39, 0.9)
+  );
+  border: 1px solid rgba(108, 99, 255, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.95);
+}
 @keyframes toast-slide-in {
   from {
     transform: translate3d(120%, 0, 0);
