@@ -4,6 +4,7 @@ import { buildPath } from "./Path";
 import { storeToken } from "../tokenStorage";
 import { jwtDecode } from "jwt-decode";
 import { APP_NAME } from "../config";
+import ThemeToggle from "./ThemeToggle";
 
 function Login() {
   const [message, setMessage] = useState("");
@@ -12,6 +13,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const inactiveTabIndex = showModal ? undefined : -1;
 
   // Close modal on ESC key
   useEffect(() => {
@@ -87,9 +89,12 @@ function Login() {
       <header className="topbar">
         <div className="topbar__inner">
           <span className="brand">{APP_NAME}</span>
-          <button className="btn-topbar" onClick={() => setShowModal(true)}>
-            Sign in
-          </button>
+          <div className="topbar__actions">
+            <ThemeToggle />
+            <button className="btn-topbar" onClick={() => setShowModal(true)}>
+              Sign in
+            </button>
+          </div>
         </div>
       </header>
 
@@ -149,11 +154,13 @@ function Login() {
         role="dialog"
         aria-modal="true"
         aria-label="Login form"
+        aria-hidden={!showModal}
       >
         <button
           className="modal-close"
           onClick={() => setShowModal(false)}
           aria-label="Close"
+          tabIndex={inactiveTabIndex}
         >
           ×
         </button>
@@ -172,6 +179,7 @@ function Login() {
               value={loginName}
               onChange={(e) => setLoginName(e.target.value)}
               required
+              tabIndex={inactiveTabIndex}
             />
           </div>
 
@@ -187,23 +195,29 @@ function Login() {
               value={loginPassword}
               onChange={(e) => setPassword(e.target.value)}
               required
+              tabIndex={inactiveTabIndex}
             />
           </div>
           <div style={{ textAlign: 'left', marginTop: '-12px', marginBottom: '16px' }}>
-            <a className="muted small" href="/forgot-password">
+            <a className="muted small" href="/forgot-password" tabIndex={inactiveTabIndex}>
               Forgot password?
             </a>
           </div>
 
           {message && <div className="error">{message}</div>}
 
-          <button type="submit" className="btn btn--primary" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn--primary"
+            disabled={loading}
+            tabIndex={inactiveTabIndex}
+          >
             {loading ? "Signing in…" : "Sign in"}
           </button>
 
           <p className="helper">
             Don't have an account?{" "}
-            <a className="link" href="/register">
+            <a className="link" href="/register" tabIndex={inactiveTabIndex}>
               Register
             </a>
           </p>

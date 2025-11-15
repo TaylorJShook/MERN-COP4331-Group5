@@ -1,1 +1,1 @@
-export const APP_NAME = "Daily Task Planner";
+export const APP_NAME = "DayGrid";

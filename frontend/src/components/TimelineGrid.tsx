@@ -245,6 +245,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
   const sidebarCloseRef = useRef<HTMLButtonElement>(null);
   const previousFocusedElementRef = useRef<HTMLElement | null>(null);
 
+  // Track whether we should auto-scroll (only after day changes)
+  const pendingScrollRef = useRef(true);
+
   // State for current time (for real-time status checking)
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
@@ -1118,36 +1121,42 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
     }
   }, [tasks, selectedTask]);
 
-  // Auto-scroll to first task when day changes
+  // When the selected day changes, queue an auto-scroll once layout settles
   useEffect(() => {
-    // Wait for task positions to be calculated and DOM to update
+    pendingScrollRef.current = true;
+  }, [selectedDate]);
+
+  // Auto-scroll to first task after layout updates, but only when pending flag is set
+  useEffect(() => {
+    if (!pendingScrollRef.current) {
+      return;
+    }
+
     const scrollTimeout = setTimeout(() => {
-      if (timelineColumnRef.current && taskPositions.length > 0) {
-        // Find the first task (lowest top position)
-        const firstTask = taskPositions.reduce((earliest, current) => {
-          return current.top < earliest.top ? current : earliest;
-        }, taskPositions[0]);
+      if (!timelineColumnRef.current) return;
 
-        // Scroll to the first task position
-        // Task positions are relative to timeline-inner, which is inside the scroll container
-        // Add some padding from top for better visibility (20px)
+      if (taskPositions.length > 0) {
+        const firstTask = taskPositions.reduce((earliest, current) =>
+          current.top < earliest.top ? current : earliest
+        , taskPositions[0]);
+
         const scrollPosition = Math.max(0, firstTask.top - 20);
-
         timelineColumnRef.current.scrollTo({
           top: scrollPosition,
           behavior: "smooth",
         });
-      } else if (timelineColumnRef.current && taskPositions.length === 0) {
-        // If no tasks, scroll to top
+      } else {
         timelineColumnRef.current.scrollTo({
           top: 0,
           behavior: "smooth",
         });
       }
-    }, 300); // Delay to ensure DOM has updated with new task positions and slot heights
+
+      pendingScrollRef.current = false;
+    }, 300);
 
     return () => clearTimeout(scrollTimeout);
-  }, [selectedDate, taskPositions]);
+  }, [taskPositions]);
 
   // Generate time slots with dynamic heights
   const timeSlots: Array<{

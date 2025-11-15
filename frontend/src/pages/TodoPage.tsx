@@ -1,6 +1,7 @@
 import LoggedInName from '../components/LoggedInName';
 import TodoUI from '../components/TodoUI';
 import { APP_NAME } from '../config';
+import ThemeToggle from '../components/ThemeToggle';
 
 const TodoPage = () =>
 {
@@ -15,7 +16,10 @@ const TodoPage = () =>
             <header className="topbar">
                 <div className="topbar__inner">
                     <span className="brand">{APP_NAME}</span>
-                    <LoggedInName />
+                    <div className="topbar__actions">
+                        <ThemeToggle />
+                        <LoggedInName />
+                    </div>
                 </div>
             </header>
 
