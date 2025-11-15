@@ -119,10 +119,10 @@ function Login() {
           </p>
         </div>
         <div className="feature-card">
-          <div className="feature-icon">⏰</div>
-          <h3 className="feature-title">Smart Reminders</h3>
+          <div className="feature-icon">🎯</div>
+          <h3 className="feature-title">Status Tracking</h3>
           <p className="feature-desc">
-            Never miss a deadline with timely notifications
+            Monitor task status from upcoming to overdue automatically
           </p>
         </div>
         <div className="feature-card">
