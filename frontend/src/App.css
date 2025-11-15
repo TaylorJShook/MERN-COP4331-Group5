@@ -981,7 +981,7 @@
   outline-offset: 2px;
   border-radius: 50%;
 }
-.todo-card:focus-within {
+.todo-card:focus-within:has(:focus-visible) {
   outline: 2px solid var(--indigo);
   outline-offset: 2px;
   border-radius: var(--r-md);
