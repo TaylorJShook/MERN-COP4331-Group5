@@ -158,6 +158,16 @@ function TodoUI() {
   const previousStatusesRef = useRef<Map<string, TaskStatus>>(new Map());
 
   // Track completion timestamps for tasks (when they were marked as completed)
+
+  // Auto-dismiss toast message after 3 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
   const [completionTimestamps, setCompletionTimestamps] = useState<
     Map<string, Date>
   >(new Map());
@@ -469,7 +479,7 @@ function TodoUI() {
         setFormErrors({ general: res.error });
         setMessage("Error: " + res.error);
       } else {
-        setMessage("Todo added successfully!");
+        setMessage("Task added successfully!");
         storeToken(res.jwtToken);
         setTitle("");
         setDescription("");
@@ -558,7 +568,7 @@ function TodoUI() {
       if (res.error && res.error.length > 0) {
         setMessage("Error: " + res.error);
       } else {
-        setMessage("Todo deleted successfully!");
+        setMessage("Task deleted successfully!");
         storeToken(res.jwtToken);
         await getTodos();
       }
@@ -740,7 +750,7 @@ function TodoUI() {
         setEditFormErrors({ general: res.error });
         setMessage("Error: " + res.error);
       } else {
-        setMessage("Todo updated successfully!");
+        setMessage("Task updated successfully!");
         storeToken(res.jwtToken);
         setEditingId(null);
         setOriginalTaskData(null);
@@ -1432,7 +1442,7 @@ function TodoUI() {
         </>
       )}
 
-      {message && !showAddModal && (
+      {message && (
         <div className="todo-message">{message}</div>
       )}
     </div>
