@@ -127,9 +127,9 @@ function Login() {
         </div>
         <div className="feature-card">
           <div className="feature-icon">📊</div>
-          <h3 className="feature-title">Track Progress</h3>
+          <h3 className="feature-title">Timeline View</h3>
           <p className="feature-desc">
-            Visualize your achievements and stay motivated
+            Visual hourly schedule to see your entire day
           </p>
         </div>
       </section>
