@@ -960,28 +960,11 @@
 /* Always show focus indicator for accessibility - this is required by WCAG */
 /* Use both outline and box-shadow for maximum browser compatibility and visibility */
 .timeline-task-block:focus {
-  /* Outline for focus indicator */
-  outline: 3px solid var(--indigo) !important;
-  outline-offset: 2px;
-  /* Box-shadow that combines with existing shadow + adds focus ring */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px var(--indigo),
-    0 0 0 5px rgba(108, 99, 255, 0.2) !important;
-  z-index: 10 !important;
-  /* Prevent outline from being removed */
-  outline-style: solid !important;
-  outline-width: 3px !important;
-  outline-color: var(--indigo) !important;
+  /* No outline on regular focus (mouse clicks) */
+  outline: none;
 }
-/* Enhanced support for focus-visible (shows outline on keyboard navigation) */
+/* Enhanced support for focus-visible (shows outline on keyboard navigation only) */
 .timeline-task-block:focus-visible {
-  outline: 3px solid var(--indigo) !important;
-  outline-offset: 2px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px var(--indigo),
-    0 0 0 5px rgba(108, 99, 255, 0.2) !important;
-  z-index: 10 !important;
-}
-/* Ensure outline persists for tabindex elements (extra specificity) */
-.timeline-task-block[tabindex="0"]:focus {
   outline: 3px solid var(--indigo) !important;
   outline-offset: 2px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px var(--indigo),
@@ -1870,6 +1853,11 @@ textarea::placeholder {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-color: rgba(255, 255, 255, 0.5);
+}
+.timeline-task-block:active {
+  transform: scale(0.97) translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 /* Subtle pulse animation when status changes */
 @keyframes taskStatusFadeIn {

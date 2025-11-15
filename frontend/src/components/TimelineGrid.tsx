@@ -184,7 +184,10 @@ const TaskBlock: React.FC<TaskBlockProps> = React.memo(
           height: `${position.height}px`,
           backgroundColor: taskColor,
         }}
-        onClick={() => onSelect(task)}
+        onClick={(e) => {
+          onSelect(task);
+          (e.currentTarget as HTMLElement).blur();
+        }}
         onKeyDown={handleKeyDown}
         role="button"
         tabIndex={0}
