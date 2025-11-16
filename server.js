@@ -12,6 +12,7 @@ const allowedOrigins = [
   "http://cop4331-group5.xyz",
   "https://cop4331-group5.xyz",
   "https://app.swaggerhub.com",
+  "https://editor.swagger.io",
 ];
 
 app.use(
