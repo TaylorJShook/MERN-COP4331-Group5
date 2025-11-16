@@ -11,6 +11,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://cop4331-group5.xyz",
   "https://cop4331-group5.xyz",
+  "https://app.swaggerhub.com",
 ];
 
 app.use(
